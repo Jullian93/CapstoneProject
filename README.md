@@ -1,16 +1,11 @@
-# CapstoneProject
+# Capstone Project Proposal 
 
 
-Project Proposal 
+**How do we predict revenue?** How do revenue numbers lead to insights about the user journey? <!--- what is a user journey? Your audience doesn't know --> How do we operationalize these insights into the optimized the user journey? <!--- avoid casual language -->
 
-Herein lies the 510 Capstone Project -
+The idea is to translate data insights into executive level insights that will shape the fabric of my client. <!--- what is fabric of a client? avoid jargon -->
 
-
-**How do we predict revenue?** How does boring revenue numbers lead to insights about the user journey? How do we operationalize these insights into the optimize the user journey? 
-
-The idea is to translate data insights into executive level insights that will shape the fabric of my client.
-
-This analysis will be an ecosystem unto itself that will be partitioned into 6 simple steps:
+This analysis will be an ecosystem unto itself that will be partitioned into 6 steps:
 
   1). It begins with data acquisition, data validation, data normalization, and then I will utilize subject matter experts to apply checks & insights along the way.
 
