@@ -25,8 +25,8 @@ The intention here is to survey my clients vast ecommerce empire and download tr
 
 _- What do you expect/hope to find?_
 I hope to find two things: 
-1.	1). New key performance indicators that will be highly indicative of user purchases. What traffic is most correlated with Revenue? How can we test for causation?
-2.	2). Online Marketing attribution of Revenue – how much does the online empire net the retail sales? What percent of the overall Revenue can the online marketers lay claim to?
+1. New key performance indicators that will be highly indicative of user purchases. What traffic is most correlated with Revenue? How can we test for causation?
+2. Online Marketing attribution of Revenue – how much does the online empire net the retail sales? What percent of the overall Revenue can the online marketers lay claim to?
 
 ## Introduction Conclusion 
 _- Summarize the problem and your solution._
@@ -65,10 +65,14 @@ _Features_
 -	The data is extremely dynamic at the Day Traffic Level. We can apply City/Device type segments before importing the data.
 -	I have 30-40 weeks of clean data (as we do the analysis, we can feed in more data as the weeks pass)
 
-**
-Exploratory Data Analysis**__
+__**Exploratory Data Analysis**__
+
 These beginning stages of exploration is intended to reduce dimensionality of our variables – we have 30+ with only 30-40 rows of data (weeks). One of the best initial tools for this is a PCA and qualitative tools to reduce the number of columns. Our goal is to leave this analysis with a handful of variables that can accurately predict revenue – how many variables is not known in this initial stage, but we are hoping for less than 10.
+
 The initial analysis is a PCA and work with a Data Science (DS) expert who has over 7 years of experience with the data. I have spent around 3 hours navigating the site and interviewing my family members as they went navigated the site. I took careful notes and have been building Calculated Metrics based on their interactions. Utilizing the DS subject matter expert we created around 30 calculated metrics that should offer us a strong glimpse into revenue predictions. 
+
 I have exported all the traffic data into a CSV and imported it to conduct a Principle Component Analysis ( in R. (See PCA). This PCA found that all our metrics can be clumped into three principle components that have extraordinary revenue predicting capabilities. We are using a Mean Average Precent Error (MAPE) and Root Mean Square Error (RMSE) to determine model accuracy and health. A quality MAPE score is around less than 10% and this preliminary PCA is netting a MAPE of 5.6% and an RMSE of around 6% of the mean (which is very good). This validates the PCA’s – when we open up the Principle Components we find some interesting findings.
+
 Catalog Interaction and Catalog search is highly correlated with Revenue. This is very surprising as it is the current theory that a “Store Search” or “Basket Transfer” will be the strongest predictors of Revenue. It is assumed that these are the last stops right before you head to a store to purchase the product. 
+
 What does this mean? With this principle components we can now begin testing a model that can predict revenue based on the insights found in the PCA. We have reduced many of the ‘entry-pages’ down – and we are only left with a handful of entry pages that seem to have any prediction value. 
