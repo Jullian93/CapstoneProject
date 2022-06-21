@@ -30,6 +30,7 @@ library(ShapleyValue)
 library(kableExtra)
 library(car)
 library(readxl)
+library(blogdown)
 
 DMM_2022_Data_BST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - BST - Used (10).csv")
 DMM_2022_Data_FST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - FST - Used.csv")
@@ -137,5 +138,7 @@ forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>%
   RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
   MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
     MAPE
-    
+  
+
+
 ```
