@@ -35,93 +35,94 @@ library(readxl)
 library(blogdown)
 
 
-DMM_2022_Data_BST_Used &lt;- read.csv(&quot;C:/Users/julli/Downloads/DMM 2022 - Data - BST - Used (10).csv&quot;)
-DMM_2022_Data_FST_Used &lt;- read.csv(&quot;C:/Users/julli/Downloads/DMM 2022 - Data - FST - Used.csv&quot;)
-HiddenData &lt;- read.csv(&quot;C:/Users/julli/Downloads/DMM_CSV_2Weeks.csv&quot;)
-HiddenFST &lt;- read.csv(&quot;C:/Users/julli/Downloads/HiddenFST.csv&quot;)
-BST &lt;- clean_names(DMM_2022_Data_BST_Used)
-BST &lt;- dplyr::select(BST, -c(entry_page_home_page, entry_page_includes_size, entry_page_includes_tire_type, entry_page_includes_vehicles, entry_page_includes_tire_brands, tdp_entry, csc_entry))
+DMM_2022_Data_Used &lt;- read.csv(&quot;C:/Users/julli/Downloads/Masked_Data.csv&quot;)
+DMM_2022_Data_Used2 &lt;- read.csv(&quot;C:/Users/julli/Downloads/MaskedData2.csv&quot;)
 
-FST &lt;- clean_names(DMM_2022_Data_FST_Used)
-FST &lt;- dplyr::select(FST, -c(entry_page_home_page, entry_page_includes_size, entry_page_includes_tire_type, entry_page_includes_vehicles, entry_page_includes_tire_brands, tdp_entry, csc_entry))</code></pre>
-<div id="step-1-pca---factor-analysis-fst" class="section level1">
-<h1>STEP 1: PCA - FACTOR ANALYSIS” FST</h1>
-<pre class="r"><code>DMM &lt;- FST %&gt;% filter(promo == 0) %&gt;% dplyr::select(-c(brand,region,week,revenue))
+RST &lt;- clean_names(DMM_2022_Data_Used)
+RST &lt;- dplyr::select(RST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
+
+QST &lt;- clean_names(DMM_2022_Data_Used2)
+QST &lt;- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))</code></pre>
+<div id="step-1-pca---factor-analysis-qst" class="section level1">
+<h1>STEP 1: PCA - FACTOR ANALYSIS” QST</h1>
+<pre class="r"><code>DMM &lt;- QST %&gt;% dplyr::select(-c(week,var_38))
 
 ## FACTOR
 
 DMM_1 &lt;- prcomp(x = DMM)
 screeplot(DMM_1, type = &quot;lines&quot;) ## We want to cutoff the screeplot at 4 factors</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<pre class="r"><code>prc &lt;- bind_cols(dplyr::select(FST %&gt;% filter(promo == 0),revenue),as.data.frame(DMM_1$x))
+<pre class="r"><code>prc &lt;- bind_cols(dplyr::select(QST, var_38),as.data.frame(DMM_1$x))
 
-# Correlation with Revenue
-correlationmatrix &lt;- cor(x = prc, y = prc$revenue) 
+# Correlation with var_38
+correlationmatrix &lt;- cor(x = prc, y = prc$var_38) 
 correlationmatrix</code></pre>
-<pre><code>##                 [,1]
-## revenue  1.000000000
-## PC1     -0.037870860
-## PC2      0.667603757
-## PC3      0.011053967
-## PC4      0.080400243
-## PC5      0.171860415
-## PC6     -0.365726068
-## PC7     -0.145078563
-## PC8      0.096359975
-## PC9     -0.138162578
-## PC10     0.338435069
-## PC11     0.229646650
-## PC12    -0.069284985
-## PC13     0.041248049
-## PC14    -0.022477271
-## PC15     0.116048995
-## PC16     0.007423457
-## PC17     0.056817004
-## PC18     0.075877739
-## PC19     0.057369814
-## PC20    -0.088283811
-## PC21     0.163730997
-## PC22    -0.061128014
-## PC23    -0.146468645
-## PC24    -0.029490017
-## PC25     0.081742121
-## PC26     0.189676500
-## PC27    -0.120111446
-## PC28     0.125466767
-## PC29    -0.096895146</code></pre>
+<pre><code>##               [,1]
+## var_38  1.00000000
+## PC1    -0.10868936
+## PC2    -0.54938933
+## PC3     0.11059446
+## PC4    -0.03883783
+## PC5     0.02237427
+## PC6     0.34167966
+## PC7     0.18964151
+## PC8     0.01481907
+## PC9     0.36655506
+## PC10   -0.19897225
+## PC11   -0.23288993
+## PC12    0.10957394
+## PC13   -0.03229158
+## PC14    0.16139539
+## PC15    0.04080533
+## PC16    0.14192182
+## PC17    0.02641140
+## PC18    0.07263581
+## PC19   -0.02642176
+## PC20   -0.02160868
+## PC21    0.04956813
+## PC22   -0.09008371
+## PC23    0.04569367
+## PC24    0.21162521
+## PC25    0.06042883
+## PC26    0.21421249
+## PC27   -0.27739782
+## PC28    0.09358079
+## PC29   -0.06404932
+## PC30   -0.16174947</code></pre>
 <pre class="r"><code>filteredcorrelations &lt;- as.data.frame(apply(correlationmatrix, 2, function(x) ifelse (abs(x) &gt;=0.10, round(x,3), &quot;-&quot;)))
 filteredcorrelations</code></pre>
-<pre><code>##             V1
-## revenue      1
-## PC1          -
-## PC2      0.668
-## PC3          -
-## PC4          -
-## PC5      0.172
-## PC6     -0.366
-## PC7     -0.145
-## PC8          -
-## PC9     -0.138
-## PC10     0.338
-## PC11      0.23
-## PC12         -
-## PC13         -
-## PC14         -
-## PC15     0.116
-## PC16         -
-## PC17         -
-## PC18         -
-## PC19         -
-## PC20         -
-## PC21     0.164
-## PC22         -
-## PC23    -0.146
-## PC24         -
-## PC25         -
-## PC26      0.19
-## PC27     -0.12
-## PC28     0.125
-## PC29         -</code></pre>
+<pre><code>##            V1
+## var_38      1
+## PC1    -0.109
+## PC2    -0.549
+## PC3     0.111
+## PC4         -
+## PC5         -
+## PC6     0.342
+## PC7      0.19
+## PC8         -
+## PC9     0.367
+## PC10   -0.199
+## PC11   -0.233
+## PC12     0.11
+## PC13        -
+## PC14    0.161
+## PC15        -
+## PC16    0.142
+## PC17        -
+## PC18        -
+## PC19        -
+## PC20        -
+## PC21        -
+## PC22        -
+## PC23        -
+## PC24    0.212
+## PC25        -
+## PC26    0.214
+## PC27   -0.277
+## PC28        -
+## PC29        -
+## PC30   -0.162</code></pre>
 <pre class="r"><code>melted_cormat &lt;- melt(correlationmatrix)
 
 ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
@@ -133,549 +134,216 @@ ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   geom_text(aes(label = round(value, 2)), color = &quot;black&quot;, size = 3) +
   coord_fixed()</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
-<pre class="r"><code># Finding most correlated PCA - for FST, it&#39;s Component 2.
+<pre class="r"><code># Finding most correlated PCA - for QST, it&#39;s Component 2.
 biplot(DMM_1, choices = c(1,2))</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
 <pre class="r"><code>print(ncol(DMM_1))</code></pre>
 <pre><code>## NULL</code></pre>
 <pre class="r"><code>DMM_1$rotation</code></pre>
-<pre><code>##                                                            PC1          PC2
-## csc_catalog_not_entry                            -0.0451394220  0.330377580
-## tdp_but_tdp_not_entry                            -0.0181736295  0.146217764
-## tire_brand_visit_entry_page_not_tire_brand_visit -0.0059993124  0.032532127
-## offers_section_not_financing_visit                0.0057752205  0.041030643
-## x90_day_buy_try_visit                            -0.0038688628  0.008660155
-## cfna_application_visit                            0.0011012696  0.001475093
-## credit_card_vendor_click_through_e61              0.0002886396  0.001465705
-## visited_reward_center                             0.0052048124  0.004247821
-## page_contains_racing_visit                        0.0025716425 -0.002819555
-## catalog_search_complete_e10                      -0.1157802264  0.898684757
-## tire_detail_view_e20                              0.9916275721  0.127849713
-## locate_tire_visits                               -0.0086109181  0.051691296
-## store_dealer_visits                              -0.0023846186  0.051654257
-## store_search_experiment                          -0.0094855677  0.094070606
-## individual_store_detail_e40                      -0.0065072450  0.061476947
-## catalog_sort_change_e110                          0.0037860601  0.003359309
-## tire_comparison_e24                              -0.0013405030  0.003901746
-## tire_fit_interaction_e46                         -0.0183085100  0.116937135
-## store_detail_click_e38                           -0.0008216464  0.014450497
-## content_show_hide_click_e35                      -0.0012867564  0.008701897
-## purchase_at_retailer_e48                         -0.0013608620  0.005413647
-## tab_navigation_click_e17                         -0.0013195160  0.041429742
-## csc_interaction                                   0.0026542329  0.006010967
-## tdp_interaction                                   0.0007770489  0.032400794
-## stepss                                           -0.0072851217  0.059392339
-## manual_e4_tdp                                    -0.0017121640  0.016980041
-## manual_e4_csc                                    -0.0073106112  0.036535558
-## manual_e4                                        -0.0086004633  0.051705611
-## video_views_e65                                   0.0046967281  0.005835922
-## promo                                             0.0000000000  0.000000000
-##                                                           PC3           PC4
-## csc_catalog_not_entry                            -0.294813925 -0.3486310097
-## tdp_but_tdp_not_entry                            -0.234647285 -0.2606219753
-## tire_brand_visit_entry_page_not_tire_brand_visit -0.131294621 -0.3347992798
-## offers_section_not_financing_visit               -0.099876465  0.1201428319
-## x90_day_buy_try_visit                             0.053208276 -0.0004274080
-## cfna_application_visit                           -0.064955233  0.0138614195
-## credit_card_vendor_click_through_e61             -0.023866901  0.0061886131
-## visited_reward_center                             0.023546795  0.0672432592
-## page_contains_racing_visit                       -0.059097150  0.0009094568
-## catalog_search_complete_e10                       0.055292328  0.3078968210
-## tire_detail_view_e20                              0.002966089 -0.0017899830
-## locate_tire_visits                               -0.002483148 -0.0376707818
-## store_dealer_visits                              -0.061104699 -0.4687565528
-## store_search_experiment                          -0.066620320 -0.4843207894
-## individual_store_detail_e40                      -0.006547992 -0.0143926152
-## catalog_sort_change_e110                         -0.064531321  0.1038184174
-## tire_comparison_e24                              -0.001152644 -0.0176708848
-## tire_fit_interaction_e46                          0.865072011 -0.3190985228
-## store_detail_click_e38                           -0.017804181 -0.0089217042
-## content_show_hide_click_e35                       0.016078292 -0.0098417958
-## purchase_at_retailer_e48                         -0.014305553  0.0316990867
-## tab_navigation_click_e17                          0.092963692 -0.0318603325
-## csc_interaction                                  -0.056187985  0.0626857669
-## tdp_interaction                                   0.123836903  0.0183563531
-## stepss                                           -0.154765022 -0.0719978109
-## manual_e4_tdp                                    -0.008155244 -0.0035663274
-## manual_e4_csc                                     0.005478826 -0.0387836598
-## manual_e4                                        -0.002148893 -0.0374418280
-## video_views_e65                                   0.058087873  0.0323377505
-## promo                                             0.000000000  0.0000000000
-##                                                          PC5          PC6
-## csc_catalog_not_entry                            -0.25830908  0.143108112
-## tdp_but_tdp_not_entry                             0.27938683  0.157575303
-## tire_brand_visit_entry_page_not_tire_brand_visit -0.03528400  0.074391670
-## offers_section_not_financing_visit                0.54132220 -0.338890222
-## x90_day_buy_try_visit                            -0.20825163  0.025168525
-## cfna_application_visit                           -0.11173529 -0.017094180
-## credit_card_vendor_click_through_e61             -0.03948721 -0.005386861
-## visited_reward_center                             0.13076426 -0.032858720
-## page_contains_racing_visit                        0.06625324 -0.002530265
-## catalog_search_complete_e10                       0.03071074  0.023540812
-## tire_detail_view_e20                             -0.01389002  0.007004508
-## locate_tire_visits                               -0.13174289 -0.008139269
-## store_dealer_visits                               0.23045261 -0.150697884
-## store_search_experiment                           0.12576070 -0.160783704
-## individual_store_detail_e40                      -0.28737759 -0.877380477
-## catalog_sort_change_e110                          0.12679054 -0.055476366
-## tire_comparison_e24                              -0.01158020 -0.005657740
-## tire_fit_interaction_e46                         -0.03032912  0.017472175
-## store_detail_click_e38                            0.01292183 -0.019832464
-## content_show_hide_click_e35                       0.00140679 -0.022264959
-## purchase_at_retailer_e48                          0.01625765 -0.021790365
-## tab_navigation_click_e17                          0.32008909 -0.001674517
-## csc_interaction                                   0.09513191 -0.051158916
-## tdp_interaction                                   0.34242918 -0.034404929
-## stepss                                           -0.17842012 -0.042309785
-## manual_e4_tdp                                    -0.01825613  0.017858341
-## manual_e4_csc                                    -0.12320991 -0.028094228
-## manual_e4                                        -0.13190284 -0.008109150
-## video_views_e65                                   0.03109501  0.041167507
-## promo                                             0.00000000  0.000000000
-##                                                           PC7          PC8
-## csc_catalog_not_entry                             0.197447445 -0.461617708
-## tdp_but_tdp_not_entry                             0.398567797  0.173282662
-## tire_brand_visit_entry_page_not_tire_brand_visit  0.228568272 -0.051682658
-## offers_section_not_financing_visit               -0.241943806 -0.636779552
-## x90_day_buy_try_visit                             0.028317931 -0.131857741
-## cfna_application_visit                           -0.131206583  0.095085517
-## credit_card_vendor_click_through_e61             -0.032244794  0.022003568
-## visited_reward_center                            -0.001127432  0.084095344
-## page_contains_racing_visit                       -0.021891156  0.242121297
-## catalog_search_complete_e10                      -0.078558733  0.132098901
-## tire_detail_view_e20                              0.002555830  0.000417205
-## locate_tire_visits                               -0.221510557  0.037930205
-## store_dealer_visits                              -0.217133886  0.159781482
-## store_search_experiment                          -0.401332622  0.175007721
-## individual_store_detail_e40                       0.346361003  0.089102359
-## catalog_sort_change_e110                         -0.091267781  0.234757258
-## tire_comparison_e24                               0.003588618  0.014268697
-## tire_fit_interaction_e46                          0.013571377 -0.113794613
-## store_detail_click_e38                           -0.017994613  0.123538026
-## content_show_hide_click_e35                       0.022125028  0.002274149
-## purchase_at_retailer_e48                         -0.033686185 -0.018086491
-## tab_navigation_click_e17                          0.278782036  0.113237541
-## csc_interaction                                  -0.077203799  0.187341516
-## tdp_interaction                                   0.250791736  0.100469967
-## stepss                                           -0.221915492  0.091455557
-## manual_e4_tdp                                    -0.060041949  0.081585527
-## manual_e4_csc                                    -0.164945792 -0.029697817
-## manual_e4                                        -0.220782210  0.038474827
-## video_views_e65                                  -0.050597156 -0.117797015
-## promo                                             0.000000000  0.000000000
-##                                                            PC9          PC10
-## csc_catalog_not_entry                             0.1898306097 -0.0920412496
-## tdp_but_tdp_not_entry                            -0.3218023315 -0.0599460012
-## tire_brand_visit_entry_page_not_tire_brand_visit -0.2320257594 -0.1960198891
-## offers_section_not_financing_visit               -0.1920597245 -0.1390140340
-## x90_day_buy_try_visit                            -0.1219135276 -0.1643922105
-## cfna_application_visit                           -0.0673079918  0.0856702415
-## credit_card_vendor_click_through_e61             -0.0409938670  0.0165181842
-## visited_reward_center                            -0.0353439686  0.1632885242
-## page_contains_racing_visit                       -0.0825056824 -0.5941349844
-## catalog_search_complete_e10                       0.0777783802  0.0426024443
-## tire_detail_view_e20                             -0.0008635656  0.0014871680
-## locate_tire_visits                               -0.4002598291  0.0435569279
-## store_dealer_visits                               0.3715982704  0.0982599601
-## store_search_experiment                           0.0401183342  0.1190837507
-## individual_store_detail_e40                      -0.0150982881 -0.0102787196
-## catalog_sort_change_e110                          0.1225311338 -0.4409084925
-## tire_comparison_e24                              -0.0303113366 -0.0212720383
-## tire_fit_interaction_e46                         -0.0584322414 -0.1838400812
-## store_detail_click_e38                           -0.0789052984 -0.0009334067
-## content_show_hide_click_e35                      -0.0654725748  0.1161659671
-## purchase_at_retailer_e48                         -0.0566838153  0.0707369656
-## tab_navigation_click_e17                         -0.1670977241  0.1367101119
-## csc_interaction                                   0.0675461863 -0.3492590926
-## tdp_interaction                                  -0.1483657755  0.2101083732
-## stepss                                           -0.2737741113  0.0826786868
-## manual_e4_tdp                                    -0.1208904179  0.1423954267
-## manual_e4_csc                                    -0.3100375129 -0.1025984818
-## manual_e4                                        -0.4013505773  0.0438757459
-## video_views_e65                                   0.0056659129 -0.1292427306
-## promo                                             0.0000000000  0.0000000000
-##                                                          PC11         PC12
-## csc_catalog_not_entry                             0.477568039 -0.140503800
-## tdp_but_tdp_not_entry                             0.031837590  0.525028639
-## tire_brand_visit_entry_page_not_tire_brand_visit -0.605830699 -0.252364213
-## offers_section_not_financing_visit               -0.070553284  0.110106907
-## x90_day_buy_try_visit                            -0.097670826  0.035794404
-## cfna_application_visit                            0.008547897 -0.052464250
-## credit_card_vendor_click_through_e61              0.001315145 -0.041243091
-## visited_reward_center                            -0.026896508 -0.009219088
-## page_contains_racing_visit                        0.010650558 -0.298080458
-## catalog_search_complete_e10                      -0.200388578 -0.012902238
-## tire_detail_view_e20                             -0.001239053  0.004067315
-## locate_tire_visits                                0.163384546 -0.031854446
-## store_dealer_visits                              -0.108931284 -0.019424115
-## store_search_experiment                           0.039462094 -0.073925937
-## individual_store_detail_e40                       0.015386381  0.014398720
-## catalog_sort_change_e110                          0.208425392  0.098684867
-## tire_comparison_e24                               0.037150412  0.005760992
-## tire_fit_interaction_e46                          0.058866966  0.173086746
-## store_detail_click_e38                            0.146981265 -0.079979520
-## content_show_hide_click_e35                       0.045521494 -0.054824643
-## purchase_at_retailer_e48                          0.156007056  0.044688434
-## tab_navigation_click_e17                          0.093137287 -0.266135753
-## csc_interaction                                   0.238720484  0.105703545
-## tdp_interaction                                   0.306066978 -0.396938210
-## stepss                                           -0.085752988  0.030129999
-## manual_e4_tdp                                     0.102366811  0.005338872
-## manual_e4_csc                                     0.079178631 -0.035133207
-## manual_e4                                         0.161367417 -0.030307823
-## video_views_e65                                  -0.046506660 -0.482796273
-## promo                                             0.000000000  0.000000000
-##                                                          PC13         PC14
-## csc_catalog_not_entry                            -0.082284957 -0.015789273
-## tdp_but_tdp_not_entry                            -0.053224335  0.264550645
-## tire_brand_visit_entry_page_not_tire_brand_visit  0.222597202 -0.008145019
-## offers_section_not_financing_visit               -0.087088502  0.004722818
-## x90_day_buy_try_visit                             0.300311116 -0.434009942
-## cfna_application_visit                           -0.196509423  0.198369148
-## credit_card_vendor_click_through_e61             -0.084945346  0.062876036
-## visited_reward_center                            -0.143603238  0.068641582
-## page_contains_racing_visit                       -0.632960502 -0.141297259
-## catalog_search_complete_e10                       0.014531869 -0.035721664
-## tire_detail_view_e20                             -0.000290606 -0.004003746
-## locate_tire_visits                                0.028756221 -0.049550356
-## store_dealer_visits                               0.016388373 -0.015978942
-## store_search_experiment                           0.057712611 -0.144618554
-## individual_store_detail_e40                      -0.009538569  0.074687540
-## catalog_sort_change_e110                          0.358108136  0.015439608
-## tire_comparison_e24                               0.046465932 -0.059869619
-## tire_fit_interaction_e46                         -0.079493450  0.134758652
-## store_detail_click_e38                           -0.045689818  0.201257269
-## content_show_hide_click_e35                      -0.085959082 -0.066705344
-## purchase_at_retailer_e48                          0.063104029  0.093710942
-## tab_navigation_click_e17                          0.032216214 -0.310178593
-## csc_interaction                                   0.335484043  0.043620383
-## tdp_interaction                                   0.179492722 -0.053800779
-## stepss                                            0.029102910  0.204198277
-## manual_e4_tdp                                    -0.080647899  0.061967748
-## manual_e4_csc                                     0.121086732 -0.112185813
-## manual_e4                                         0.027676607 -0.049786938
-## video_views_e65                                   0.229111630  0.636794206
-## promo                                             0.000000000  0.000000000
-##                                                          PC15         PC16
-## csc_catalog_not_entry                             0.172869705  0.057247596
-## tdp_but_tdp_not_entry                            -0.262098829  0.047544490
-## tire_brand_visit_entry_page_not_tire_brand_visit  0.281904609 -0.205678668
-## offers_section_not_financing_visit                0.042811433  0.060304982
-## x90_day_buy_try_visit                            -0.273416820  0.524129128
-## cfna_application_visit                            0.222864284  0.165867664
-## credit_card_vendor_click_through_e61              0.100974187  0.021176234
-## visited_reward_center                             0.374220466  0.311896933
-## page_contains_racing_visit                       -0.091367162 -0.003180663
-## catalog_search_complete_e10                      -0.049169109 -0.042505773
-## tire_detail_view_e20                             -0.002211550 -0.004095682
-## locate_tire_visits                               -0.063203126 -0.124848793
-## store_dealer_visits                              -0.053281856  0.134537103
-## store_search_experiment                          -0.167249306 -0.101535482
-## individual_store_detail_e40                      -0.048505360 -0.029460092
-## catalog_sort_change_e110                          0.222653191 -0.065805574
-## tire_comparison_e24                               0.067766256  0.054687672
-## tire_fit_interaction_e46                          0.142098079  0.027750956
-## store_detail_click_e38                           -0.159374737  0.333300941
-## content_show_hide_click_e35                      -0.002134604 -0.136396869
-## purchase_at_retailer_e48                          0.189091632 -0.438655598
-## tab_navigation_click_e17                          0.264388807  0.114471089
-## csc_interaction                                   0.222936808  0.068214010
-## tdp_interaction                                  -0.086349559  0.024314227
-## stepss                                            0.362994734  0.347666070
-## manual_e4_tdp                                     0.047238524  0.024534923
-## manual_e4_csc                                    -0.098305205 -0.108438931
-## manual_e4                                        -0.064627821 -0.119649040
-## video_views_e65                                  -0.295146059  0.075971935
-## promo                                             0.000000000  0.000000000
-##                                                           PC17         PC18
-## csc_catalog_not_entry                             9.238513e-03  0.073645036
-## tdp_but_tdp_not_entry                            -4.081842e-02  0.044113842
-## tire_brand_visit_entry_page_not_tire_brand_visit  1.033683e-01  0.009258829
-## offers_section_not_financing_visit                8.794391e-02 -0.060413205
-## x90_day_buy_try_visit                            -1.268813e-01 -0.188016880
-## cfna_application_visit                            3.299039e-01  0.007352043
-## credit_card_vendor_click_through_e61              8.618110e-02  0.026268632
-## visited_reward_center                            -3.998242e-01  0.533135146
-## page_contains_racing_visit                       -1.555244e-01 -0.104896046
-## catalog_search_complete_e10                      -1.370956e-04 -0.023485056
-## tire_detail_view_e20                             -2.702889e-05 -0.001382613
-## locate_tire_visits                                1.077998e-01  0.126154014
-## store_dealer_visits                              -4.927013e-02 -0.025445899
-## store_search_experiment                          -2.571759e-02  0.017676046
-## individual_store_detail_e40                       7.109623e-03  0.031882982
-## catalog_sort_change_e110                          2.324466e-01  0.217186043
-## tire_comparison_e24                              -1.732475e-03 -0.102460814
-## tire_fit_interaction_e46                          2.488526e-02 -0.028753795
-## store_detail_click_e38                            5.104967e-02 -0.202780798
-## content_show_hide_click_e35                       1.504270e-01 -0.072483680
-## purchase_at_retailer_e48                         -5.095313e-01 -0.478099229
-## tab_navigation_click_e17                          1.574940e-01 -0.107662423
-## csc_interaction                                  -2.044641e-02 -0.154613491
-## tdp_interaction                                  -1.070388e-01 -0.002255269
-## stepss                                           -2.020221e-01 -0.299491797
-## manual_e4_tdp                                     3.904121e-01 -0.223365668
-## manual_e4_csc                                    -2.538832e-01  0.335606041
-## manual_e4                                         1.119379e-01  0.127463835
-## video_views_e65                                  -4.741280e-02  0.041282368
-## promo                                             0.000000e+00  0.000000000
-##                                                          PC19          PC20
-## csc_catalog_not_entry                            -0.002937278 -0.0498787856
-## tdp_but_tdp_not_entry                            -0.128922721  0.1018123395
-## tire_brand_visit_entry_page_not_tire_brand_visit  0.059067040 -0.1462074375
-## offers_section_not_financing_visit                0.009247228 -0.0147557204
-## x90_day_buy_try_visit                            -0.411351464  0.0101049804
-## cfna_application_visit                           -0.300021375  0.4162295924
-## credit_card_vendor_click_through_e61             -0.049653422  0.2652431453
-## visited_reward_center                            -0.220894740 -0.1952331874
-## page_contains_racing_visit                       -0.069068005 -0.0531098463
-## catalog_search_complete_e10                       0.019435086  0.0102041354
-## tire_detail_view_e20                              0.002496716  0.0003161587
-## locate_tire_visits                                0.019498796 -0.0852471924
-## store_dealer_visits                               0.076823689  0.1022176590
-## store_search_experiment                          -0.173323396 -0.0565165608
-## individual_store_detail_e40                      -0.016243416 -0.0154611924
-## catalog_sort_change_e110                         -0.225764648 -0.1646349279
-## tire_comparison_e24                               0.195550344  0.3048089093
-## tire_fit_interaction_e46                         -0.006125022 -0.0132950943
-## store_detail_click_e38                            0.439224819 -0.1694318811
-## content_show_hide_click_e35                      -0.314153779  0.3065708444
-## purchase_at_retailer_e48                         -0.258287144  0.0036821198
-## tab_navigation_click_e17                          0.090869868  0.2370201687
-## csc_interaction                                   0.166447271  0.1678190112
-## tdp_interaction                                  -0.044720755 -0.1283703132
-## stepss                                            0.083104536 -0.0545852217
-## manual_e4_tdp                                    -0.142529035 -0.4334577776
-## manual_e4_csc                                     0.277011661  0.3175749416
-## manual_e4                                         0.010916229 -0.0962794473
-## video_views_e65                                  -0.194843265  0.1222846606
-## promo                                             0.000000000  0.0000000000
-##                                                           PC21          PC22
-## csc_catalog_not_entry                             1.289371e-02 -0.0067245268
-## tdp_but_tdp_not_entry                             2.812424e-02 -0.0341992555
-## tire_brand_visit_entry_page_not_tire_brand_visit -2.099575e-01  0.1270271628
-## offers_section_not_financing_visit               -2.804765e-02  0.0481920506
-## x90_day_buy_try_visit                            -1.440165e-01 -0.0325184567
-## cfna_application_visit                           -2.753727e-01  0.3835892858
-## credit_card_vendor_click_through_e61             -1.045569e-01 -0.0960890860
-## visited_reward_center                            -2.694304e-01 -0.1475799390
-## page_contains_racing_visit                        3.936451e-02 -0.0279324961
-## catalog_search_complete_e10                      -2.770966e-02  0.0111166573
-## tire_detail_view_e20                              3.943555e-05  0.0008802106
-## locate_tire_visits                               -7.511520e-02 -0.2091865623
-## store_dealer_visits                              -3.823559e-02 -0.2933106548
-## store_search_experiment                          -2.715239e-03  0.2361646135
-## individual_store_detail_e40                       2.569171e-03 -0.0508124298
-## catalog_sort_change_e110                          1.557868e-01  0.0912149858
-## tire_comparison_e24                              -3.566339e-01 -0.1228548260
-## tire_fit_interaction_e46                          2.632273e-02  0.0517426119
-## store_detail_click_e38                           -3.151640e-01  0.2143752002
-## content_show_hide_click_e35                       1.897750e-01  0.0125843869
-## purchase_at_retailer_e48                         -2.559663e-01 -0.0568982881
-## tab_navigation_click_e17                          1.810424e-01 -0.3614595175
-## csc_interaction                                  -1.811390e-01 -0.0839116932
-## tdp_interaction                                   1.809846e-02  0.4305389121
-## stepss                                            5.538033e-01  0.0836601613
-## manual_e4_tdp                                    -1.618833e-01 -0.2711985373
-## manual_e4_csc                                     5.018360e-02  0.0827242448
-## manual_e4                                        -7.315135e-02 -0.2061597280
-## video_views_e65                                   7.029717e-02 -0.2892599357
-## promo                                             0.000000e+00  0.0000000000
-##                                                           PC23          PC24
-## csc_catalog_not_entry                             0.0061265352 -0.0051296633
-## tdp_but_tdp_not_entry                             0.0330567347  0.0032055622
-## tire_brand_visit_entry_page_not_tire_brand_visit -0.0813378443 -0.0271641507
-## offers_section_not_financing_visit               -0.0264074648  0.0045608168
-## x90_day_buy_try_visit                            -0.0539298193  0.0822064770
-## cfna_application_visit                           -0.0132967696  0.0247494743
-## credit_card_vendor_click_through_e61             -0.0404072545  0.6266269124
-## visited_reward_center                             0.0498837644 -0.1201530735
-## page_contains_racing_visit                       -0.0350711531 -0.0545120998
-## catalog_search_complete_e10                      -0.0106759284 -0.0010186237
-## tire_detail_view_e20                             -0.0005417172  0.0002150350
-## locate_tire_visits                               -0.1381514099  0.0251883899
-## store_dealer_visits                              -0.5396476634  0.0698743209
-## store_search_experiment                           0.5563314901 -0.0345728613
-## individual_store_detail_e40                       0.0342130729 -0.0030510866
-## catalog_sort_change_e110                         -0.1057775862  0.2319930940
-## tire_comparison_e24                               0.0598864590 -0.3360552281
-## tire_fit_interaction_e46                         -0.0099798979  0.0039786474
-## store_detail_click_e38                           -0.0319048656  0.2146339636
-## content_show_hide_click_e35                      -0.3078535613 -0.3601515343
-## purchase_at_retailer_e48                         -0.0351831163  0.2102083163
-## tab_navigation_click_e17                          0.3157920264  0.1881297884
-## csc_interaction                                   0.0755097588 -0.3283505800
-## tdp_interaction                                  -0.2978651094 -0.0727047757
-## stepss                                           -0.0484079862 -0.0526405266
-## manual_e4_tdp                                     0.0250977049 -0.1825333410
-## manual_e4_csc                                    -0.0442023030  0.0006314117
-## manual_e4                                        -0.1688379021  0.0387420337
-## video_views_e65                                   0.1501249261 -0.0471621693
-## promo                                             0.0000000000  0.0000000000
-##                                                           PC25          PC26
-## csc_catalog_not_entry                             0.0152959403 -1.801366e-03
-## tdp_but_tdp_not_entry                            -0.0425860691 -4.850864e-03
-## tire_brand_visit_entry_page_not_tire_brand_visit  0.0730433444  1.902295e-02
-## offers_section_not_financing_visit                0.0022833321  4.018740e-03
-## x90_day_buy_try_visit                             0.0065588911 -4.173812e-02
-## cfna_application_visit                           -0.1933276395 -2.938926e-01
-## credit_card_vendor_click_through_e61             -0.0848763982  3.837965e-01
-## visited_reward_center                             0.1719890107  4.987957e-02
-## page_contains_racing_visit                       -0.0733597976  9.948905e-03
-## catalog_search_complete_e10                      -0.0012281693 -8.773193e-04
-## tire_detail_view_e20                             -0.0000254756 -2.885287e-05
-## locate_tire_visits                               -0.0599791851  2.182202e-01
-## store_dealer_visits                              -0.0914287281 -1.604386e-01
-## store_search_experiment                           0.0793609449  1.392261e-01
-## individual_store_detail_e40                      -0.0220321610 -6.070238e-03
-## catalog_sort_change_e110                          0.1766001653 -3.162406e-03
-## tire_comparison_e24                              -0.1096154284  3.692335e-01
-## tire_fit_interaction_e46                         -0.0016267104  1.280110e-02
-## store_detail_click_e38                            0.5527283875 -1.725606e-02
-## content_show_hide_click_e35                       0.6290106482  1.620268e-01
-## purchase_at_retailer_e48                          0.0993539533 -1.557461e-01
-## tab_navigation_click_e17                          0.1132414686 -1.894404e-01
-## csc_interaction                                  -0.1078772766  3.993197e-02
-## tdp_interaction                                  -0.3027455733  1.125616e-01
-## stepss                                           -0.0854839090  1.008041e-01
-## manual_e4_tdp                                    -0.0871173212 -3.530767e-01
-## manual_e4_csc                                     0.0689840767 -5.319038e-01
-## manual_e4                                        -0.0640345866  1.146455e-01
-## video_views_e65                                   0.0131674689 -2.132241e-02
-## promo                                             0.0000000000  0.000000e+00
-##                                                           PC27          PC28
-## csc_catalog_not_entry                            -0.0060291636  0.0041708963
-## tdp_but_tdp_not_entry                            -0.0069934109 -0.0196966116
-## tire_brand_visit_entry_page_not_tire_brand_visit  0.0408163118  0.0539074781
-## offers_section_not_financing_visit                0.0053664631 -0.0041608940
-## x90_day_buy_try_visit                             0.0074837540  0.0037507105
-## cfna_application_visit                           -0.2335147708  0.0793738073
-## credit_card_vendor_click_through_e61              0.5546683251 -0.0121037068
-## visited_reward_center                             0.0528729779  0.0325696453
-## page_contains_racing_visit                        0.0068295072 -0.0198631244
-## catalog_search_complete_e10                       0.0056693679  0.0034239305
-## tire_detail_view_e20                             -0.0003145407 -0.0004743756
-## locate_tire_visits                               -0.1074197812  0.0037041093
-## store_dealer_visits                              -0.0748989149 -0.0070050263
-## store_search_experiment                           0.0763453632  0.0029958363
-## individual_store_detail_e40                      -0.0101335728  0.0022556620
-## catalog_sort_change_e110                         -0.1659234086 -0.3462872121
-## tire_comparison_e24                              -0.1480769098 -0.6235922859
-## tire_fit_interaction_e46                          0.0056118852 -0.0056920457
-## store_detail_click_e38                           -0.0759177795  0.0176152326
-## content_show_hide_click_e35                       0.1961024841  0.0525376291
-## purchase_at_retailer_e48                         -0.1191695157 -0.0576771109
-## tab_navigation_click_e17                         -0.1940721072  0.0377695242
-## csc_interaction                                   0.2691216959  0.5039093224
-## tdp_interaction                                   0.1221771987 -0.0397715586
-## stepss                                            0.0079546619 -0.1141072789
-## manual_e4_tdp                                     0.4312108750 -0.2428451232
-## manual_e4_csc                                     0.2917348730 -0.2189118394
-## manual_e4                                        -0.3231646347  0.3090098185
-## video_views_e65                                  -0.0393053528 -0.0334379473
-## promo                                             0.0000000000  0.0000000000
-##                                                           PC29
-## csc_catalog_not_entry                            -1.211650e-03
-## tdp_but_tdp_not_entry                             2.260424e-03
-## tire_brand_visit_entry_page_not_tire_brand_visit -6.157358e-03
-## offers_section_not_financing_visit                9.741002e-04
-## x90_day_buy_try_visit                            -8.892842e-03
-## cfna_application_visit                           -7.887443e-02
-## credit_card_vendor_click_through_e61              1.144778e-01
-## visited_reward_center                             5.122827e-03
-## page_contains_racing_visit                        5.302642e-03
-## catalog_search_complete_e10                      -1.223509e-04
-## tire_detail_view_e20                              4.988407e-05
-## locate_tire_visits                               -7.403698e-01
-## store_dealer_visits                              -3.373864e-02
-## store_search_experiment                           3.381743e-02
-## individual_store_detail_e40                      -2.179425e-03
-## catalog_sort_change_e110                          4.405624e-02
-## tire_comparison_e24                               1.535661e-01
-## tire_fit_interaction_e46                          2.290660e-03
-## store_detail_click_e38                           -1.834349e-02
-## content_show_hide_click_e35                       3.047474e-02
-## purchase_at_retailer_e48                         -1.742456e-02
-## tab_navigation_click_e17                         -4.554880e-02
-## csc_interaction                                  -5.908875e-02
-## tdp_interaction                                   2.853427e-02
-## stepss                                            3.256531e-02
-## manual_e4_tdp                                     9.356168e-02
-## manual_e4_csc                                     5.906951e-02
-## manual_e4                                         6.190811e-01
-## video_views_e65                                   4.219950e-03
-## promo                                             0.000000e+00</code></pre>
+<pre><code>##                  PC1           PC2           PC3           PC4           PC5
+## var_6   6.478158e-01  3.651061e-02 -3.020875e-01 -1.818099e-01 -3.948658e-01
+## var_7  -4.551727e-02 -3.578767e-01 -4.327100e-01 -4.404940e-01  5.552944e-01
+## var_10 -5.362904e-03 -3.261424e-02  1.705024e-01  1.544464e-01  2.749521e-01
+## var_11  2.877866e-03 -4.209474e-02  1.129124e-01 -1.052102e-01 -1.352872e-01
+## var_12 -3.054743e-03 -8.111874e-03 -4.062280e-02  4.339696e-02 -4.540779e-02
+## var_13  7.795650e-04 -1.736599e-03  6.948324e-02 -2.025566e-02 -4.362406e-02
+## var_14  1.697615e-04 -1.482815e-03  2.539356e-02 -7.726808e-03 -1.647378e-02
+## var_15  3.785629e-03 -5.669833e-03 -3.369530e-02 -5.101280e-02  1.604943e-02
+## var_16  2.078013e-03  2.653222e-03  3.848548e-02 -4.493119e-02  4.003480e-02
+## var_17 -1.126502e-01 -8.880989e-01  1.285734e-01 -2.475612e-02 -3.226510e-01
+## var_18  7.515364e-01 -1.930994e-01  2.477214e-01  1.532364e-01  3.268850e-01
+## var_19 -8.025954e-03 -5.079464e-02  4.846464e-02  6.608580e-02 -5.112135e-02
+## var_20 -3.709473e-03 -5.141835e-02  1.820173e-01  3.013437e-01  2.309868e-01
+## var_21 -1.028807e-02 -9.321376e-02  2.203168e-01  3.420960e-01  1.841130e-01
+## var_22 -6.797613e-03 -6.038877e-02  1.116955e-01  1.231040e-01 -2.818100e-01
+## var_23  2.545854e-03 -3.156707e-03  3.397806e-02 -1.145621e-01 -5.084296e-02
+## var_24 -1.160860e-03 -3.870109e-03  7.219510e-03  1.291820e-02  1.100346e-02
+## var_25 -1.651226e-02 -1.149315e-01 -6.523671e-01  6.706475e-01 -5.793860e-02
+## var_26 -1.162448e-03 -1.423242e-02  2.446371e-02 -1.709071e-03  1.639158e-02
+## var_27 -1.202451e-03 -8.824604e-03 -5.033100e-03  2.017988e-02  3.155724e-03
+## var_28 -1.258446e-03 -5.227678e-03  1.475051e-02 -2.101940e-02 -2.840618e-02
+## var_29 -2.267728e-03 -4.210910e-02 -8.460358e-02  2.494803e-02  1.581419e-01
+## var_30  1.621666e-03 -5.827866e-03  3.802546e-02 -7.827670e-02 -2.777016e-02
+## var_31 -3.737172e-04 -3.334026e-02 -1.229467e-01  4.275862e-03  1.216373e-01
+## var_32 -7.301109e-03 -5.871545e-02  1.912394e-01  1.976568e-02 -1.892336e-02
+## var_33 -1.822689e-03 -1.692127e-02  1.952711e-02  7.466251e-03  1.186851e-03
+## var_34 -6.570998e-03 -3.559931e-02  3.151003e-02  6.365220e-02 -5.267150e-02
+## var_35 -8.018000e-03 -5.081634e-02  4.811865e-02  6.603298e-02 -5.093220e-02
+## var_36  3.599378e-03 -5.891570e-03 -6.278047e-02  4.616722e-03 -4.515348e-02
+## var_37 -1.081849e-06 -1.621589e-06  2.257127e-05 -2.174657e-05  6.090546e-05
+##                  PC6           PC7           PC8           PC9          PC10
+## var_6   0.1443686672 -1.093883e-01  3.703961e-01 -0.1182046511  0.1286917608
+## var_7  -0.0232583373  2.554720e-01  2.123291e-01  0.1434059374  0.1868107678
+## var_10 -0.0886761936 -1.981206e-02 -2.654311e-02 -0.3995320495  0.4622196637
+## var_11  0.6720375670  2.348260e-02 -3.301431e-01  0.2648347693  0.5108922174
+## var_12 -0.2050826056  4.577665e-02 -5.125539e-02  0.0606955810  0.2495352344
+## var_13 -0.0932975852  2.367924e-03  9.688146e-02  0.1362308471 -0.0452930834
+## var_14 -0.0346235683  2.231156e-03  1.591615e-02  0.0392637013 -0.0131015985
+## var_15  0.1378593853  2.144457e-02 -2.600811e-02  0.1088260973 -0.1162694255
+## var_16  0.0432178548 -7.717181e-03  1.880607e-01 -0.0070498868 -0.0132018412
+## var_17 -0.0262303132 -1.824894e-01 -4.826482e-02 -0.1776048401 -0.0816970428
+## var_18 -0.1342054286  8.954293e-02 -3.060222e-01  0.0968524548 -0.1060459604
+## var_19 -0.1139086870 -2.840726e-02  2.771545e-02  0.4216525086  0.0216860503
+## var_20  0.3197717437 -3.473039e-02  4.004840e-01 -0.1770131832 -0.0167443822
+## var_21  0.2293435261 -5.423655e-02  4.164749e-01  0.1794383332  0.0292790238
+## var_22  0.0122030611  9.280775e-01  7.386256e-02 -0.0939719392 -0.0093071810
+## var_23  0.1468285624 -6.712439e-04  2.419787e-01  0.0566974152 -0.1980260544
+## var_24 -0.0070046559  1.167526e-02  6.125876e-03  0.0303069137 -0.0099288511
+## var_25  0.0034226736 -4.762185e-03 -6.603287e-02  0.0849124675  0.0567825942
+## var_26  0.0185692053  2.028749e-02  5.854795e-02  0.1141223657 -0.1370042147
+## var_27  0.0061607553  2.547140e-02 -5.485495e-02  0.0349043068 -0.0523415079
+## var_28  0.0260550715  2.557827e-03 -4.262796e-02  0.1051599072 -0.0782624854
+## var_29  0.2802648161  2.656752e-02 -2.078265e-01 -0.0693776640 -0.2845576152
+## var_30  0.1157788744  8.643975e-03  1.935402e-01  0.0921746689 -0.1667273609
+## var_31  0.3144115235  5.222529e-02 -2.166582e-01  0.0259607172 -0.3420271255
+## var_32 -0.1487563130  5.751870e-04  1.516232e-01  0.2581687326  0.1179607251
+## var_33 -0.0233253732 -2.616500e-02  3.170061e-04  0.1415963936 -0.1315474418
+## var_34 -0.1003927322  1.752872e-03  3.210158e-02  0.3021145189  0.1435222698
+## var_35 -0.1141710825 -2.797245e-02  2.715242e-02  0.4219086524  0.0218087820
+## var_36  0.0182483452 -7.342349e-02 -1.091427e-02 -0.0483354337  0.1669265238
+## var_37  0.0001073527  5.083984e-05  4.917129e-05  0.0003339924 -0.0001267665
+##                 PC11          PC12          PC13          PC14          PC15
+## var_6  -0.0521360677  0.2451103943 -5.306423e-02  0.0446546883  1.250581e-01
+## var_7  -0.0917400091 -0.0296457657  4.547956e-03 -0.0192465308 -1.697082e-02
+## var_10  0.3321009243  0.3877860830 -1.643778e-01  0.2968878935 -7.619180e-02
+## var_11  0.0083932329 -0.1497742598  1.100818e-01  0.0436379589 -6.017417e-02
+## var_12  0.0815421335 -0.1905712215 -2.391875e-01  0.0207488133  4.668289e-01
+## var_13 -0.0673428112  0.2084520609  2.144536e-01  0.0623005066 -1.472570e-01
+## var_14  0.0056925158  0.0755212842  7.088057e-02  0.0154600348 -6.119685e-02
+## var_15 -0.1257764674  0.2518442196  2.862936e-01  0.3047470975 -1.456819e-01
+## var_16  0.6622469491  0.0100845564  5.996410e-01 -0.3061249393  9.120174e-02
+## var_17  0.0016944888  0.0005407679  1.599094e-02 -0.0062923174  2.792424e-02
+## var_18  0.0411768131 -0.2048168082  4.353154e-02 -0.0356344390 -9.927170e-02
+## var_19  0.0801302076  0.1689069805 -8.472892e-02 -0.0293760795  1.233824e-01
+## var_20 -0.2237400750 -0.0983067467  1.177021e-02 -0.0617568680 -1.275929e-02
+## var_21 -0.1529956221  0.0416695466 -6.096292e-02 -0.1360382717  2.148594e-01
+## var_22  0.0089465924  0.0693976895 -1.788744e-02 -0.0420343812 -9.283924e-03
+## var_23  0.3748561577 -0.2680077310 -2.653050e-01  0.2796991967 -6.394023e-02
+## var_24  0.0303077062 -0.0162257478 -3.581498e-02  0.0682437423 -1.499301e-02
+## var_25  0.1090035196 -0.1102169644  1.042482e-01  0.1316622744 -1.768785e-01
+## var_26  0.0716290342  0.0380558399 -4.536654e-02 -0.1679298022 -2.216388e-01
+## var_27 -0.0464402729  0.1180152947  5.861077e-02 -0.0355783345  1.311676e-01
+## var_28 -0.0305408865 -0.0199738839 -9.325968e-02  0.0575444710 -3.083696e-01
+## var_29  0.1700546444  0.3122309799 -7.905077e-02  0.1950174446  2.851490e-01
+## var_30  0.3012237989 -0.2511411116 -2.685490e-01  0.2422311736 -2.229452e-01
+## var_31  0.0883027551  0.3315614766 -2.747482e-01 -0.2021571452  9.797363e-02
+## var_32 -0.0326875484  0.2760956721  1.482926e-02  0.2709042229 -2.678272e-01
+## var_33 -0.0450524698  0.1396640918  4.574571e-02  0.0353475308 -2.151742e-02
+## var_34  0.1462452955  0.0399987704 -1.510260e-01 -0.0540937558  1.428578e-01
+## var_35  0.0800708673  0.1699044262 -8.231462e-02 -0.0271875231  1.245484e-01
+## var_36  0.1065062929  0.1839171513 -3.350869e-01 -0.5842210897 -4.286339e-01
+## var_37 -0.0002300323 -0.0002256120 -8.502311e-05  0.0005730908 -7.882145e-05
+##                PC16          PC17          PC18         PC19          PC20
+## var_6  -0.051912668 -3.302275e-02 -0.0479176652  0.022435216  0.0054695221
+## var_7  -0.034615601 -2.351261e-02  0.0080691301  0.032474474 -0.0150323896
+## var_10 -0.125271771 -6.329480e-02  0.2022072120 -0.022334998  0.0184495857
+## var_11  0.037578503 -1.039614e-01  0.0316356915  0.092547210 -0.0154760295
+## var_12  0.575857268  3.169830e-01 -0.0670422009  0.155948135  0.2120155130
+## var_13  0.285524363  7.650676e-02  0.3189170586  0.355647012 -0.4441774441
+## var_14  0.084858963  5.500225e-02  0.0155516224  0.030761309 -0.2678832144
+## var_15  0.282303285  4.311044e-01  0.2029584938 -0.535487485  0.1659951811
+## var_16 -0.007836254  1.251502e-01 -0.1204782062  0.062506271  0.1133176418
+## var_17  0.002247552  1.392273e-02  0.0051091758 -0.021963326 -0.0034119310
+## var_18  0.037928680  2.537314e-02  0.0379667672 -0.018050483 -0.0052128074
+## var_19 -0.128019362 -9.151384e-02  0.1434853801 -0.103621013  0.0130379115
+## var_20  0.145305803  1.039669e-02 -0.1263412834 -0.112756740 -0.0665060436
+## var_21 -0.108103782  1.161600e-01  0.1151850607  0.123218296  0.0757236830
+## var_22 -0.033509008 -1.295221e-02  0.0261468995 -0.019750488  0.0147927998
+## var_23  0.023990836  5.575868e-05  0.3181920748 -0.031935214  0.1447553875
+## var_24  0.086044465  5.865324e-02 -0.0344211397  0.052206106 -0.4024248385
+## var_25  0.012162935 -4.270169e-02  0.0106940142  0.052689199  0.0065757684
+## var_26  0.289929169 -4.650441e-01 -0.1607706419 -0.156353371  0.0284142785
+## var_27 -0.073260888  1.221436e-01  0.1388014662  0.346960996 -0.1650403961
+## var_28 -0.397856747  4.958136e-01 -0.1956798567  0.276015148  0.1715566821
+## var_29  0.124089877 -7.300285e-02 -0.3146917164  0.072457626 -0.1848882924
+## var_30  0.080940198  3.361201e-02 -0.0434463072  0.083560812 -0.2154828719
+## var_31 -0.013678306  1.138004e-01  0.0211426925  0.060427846  0.1284676506
+## var_32  0.168287425 -5.138904e-02 -0.5441138279  0.205733926  0.2325786124
+## var_33  0.073803664 -2.966228e-01  0.2865478926  0.249666816  0.3493303079
+## var_34 -0.196099373  1.126907e-01 -0.2099198657 -0.382607560 -0.3457385936
+## var_35 -0.121459139 -9.483244e-02  0.1527668726 -0.105999258  0.0269913598
+## var_36  0.249390682  1.888988e-01  0.0934904474 -0.037926385 -0.0157677628
+## var_37  0.001451832  2.219089e-04  0.0009337069 -0.000271421 -0.0008773813
+##                PC21         PC22          PC23         PC24         PC25
+## var_6   0.078578574  0.013923987  0.0069049280  0.035188353  0.021214283
+## var_7  -0.005243677 -0.024211135 -0.0002597001 -0.001685344  0.012959203
+## var_10  0.148352081  0.078724877  0.0649611670  0.092595255  0.023423904
+## var_11  0.002552081  0.014582004  0.0212551909  0.003202102  0.028908703
+## var_12  0.169407346  0.015943352  0.0702065803  0.085186916  0.106576219
+## var_13  0.018503909  0.135468062  0.2488775274 -0.166000296  0.140396668
+## var_14 -0.019161602 -0.169941300  0.2091488032 -0.234954286  0.333188858
+## var_15  0.064031679 -0.018119486 -0.0500351039  0.115171530 -0.171954613
+## var_16  0.039569736  0.032726751 -0.0757047780  0.009651549  0.038529607
+## var_17  0.023415507  0.018614671  0.0019623613  0.008812156 -0.000582988
+## var_18 -0.062881781 -0.010718777 -0.0051944690 -0.028135426 -0.016716076
+## var_19  0.027462212 -0.127485574 -0.1343406410  0.078627130  0.194608380
+## var_20 -0.094429790 -0.058425959 -0.1853160918  0.271815599  0.510911617
+## var_21  0.147930774 -0.002863893  0.1839524212 -0.270306423 -0.476379318
+## var_22  0.009263874 -0.045304233 -0.0309352267 -0.023097551 -0.004678592
+## var_23 -0.320444943 -0.122765193  0.2898676366  0.007108594  0.108416065
+## var_24  0.375036679  0.081225897 -0.3835327532  0.087360404 -0.033845087
+## var_25 -0.048403866  0.031421938  0.0260205938 -0.017579716 -0.002865462
+## var_26  0.391570622  0.051714643  0.4636352320  0.373999174 -0.102720713
+## var_27 -0.354385742 -0.013975003  0.0176104417  0.722844642 -0.259650363
+## var_28  0.399777561 -0.208130017  0.2045632828  0.157601482  0.201855142
+## var_29 -0.013260718 -0.542472142  0.0241203790 -0.109577990 -0.097454323
+## var_30  0.128105127  0.152429545 -0.3606050145  0.004309270 -0.216765322
+## var_31 -0.030844075  0.606110032  0.0121150289 -0.075229632  0.211444190
+## var_32 -0.346973406  0.156776829 -0.0672377867 -0.077581254 -0.041754596
+## var_33  0.204002389 -0.149875662 -0.3405477706 -0.018579665  0.041102962
+## var_34 -0.073738038  0.118784018  0.1080241072  0.033872084 -0.036628863
+## var_35  0.012468990 -0.124860439 -0.1258953421  0.089315751  0.213292357
+## var_36 -0.176067584 -0.302056435 -0.1466249223 -0.061794129 -0.125010675
+## var_37  0.002899506 -0.005698997  0.0055012466  0.008030314  0.002448034
+##                 PC26         PC27         PC28          PC29          PC30
+## var_6   9.527569e-03  0.009005390  0.009891124  1.674784e-04  7.008198e-05
+## var_7  -1.506671e-03  0.003310059 -0.002170738  3.883930e-04 -1.001920e-04
+## var_10  1.879868e-02  0.042272593  0.037269932 -3.142128e-03  5.767596e-05
+## var_11  4.403715e-04  0.003558783 -0.008287097  4.082022e-04 -5.252123e-05
+## var_12 -2.847384e-03  0.063248407  0.026223207 -3.315576e-03 -9.722277e-05
+## var_13 -4.259414e-01 -0.027994158  0.103595535 -2.980126e-02  3.147524e-03
+## var_14  7.349874e-01  0.331584249 -0.074566568  5.228493e-02 -1.656492e-02
+## var_15  5.314553e-02  0.037866458  0.009437457  1.702073e-04  2.396389e-04
+## var_16 -1.295393e-03 -0.008616251 -0.009295613  3.633335e-04 -6.690690e-04
+## var_17  8.187376e-06  0.003690374  0.004162889 -1.224127e-04 -1.401630e-04
+## var_18 -7.827830e-03 -0.007747499 -0.008332399 -1.134244e-04 -4.415001e-05
+## var_19  7.180297e-02 -0.125025419  0.149003718 -7.343290e-01  1.392943e-01
+## var_20 -1.412915e-01  0.066595149  0.018598607 -9.778375e-03 -7.562122e-04
+## var_21  1.372581e-01 -0.042619984 -0.016174388  1.205674e-02 -1.883523e-04
+## var_22 -7.678332e-03 -0.002535719  0.006356323 -1.024997e-03  1.475781e-04
+## var_23 -2.161022e-02 -0.229204544 -0.323590754  1.993350e-02  6.001615e-03
+## var_24  1.875277e-01 -0.490448809 -0.482475635  5.083880e-02  1.258200e-02
+## var_25  7.783518e-03 -0.008224767 -0.010249021 -1.266136e-06  1.334581e-04
+## var_26  6.009388e-02 -0.009489701  0.019968603 -2.011100e-03  8.359040e-03
+## var_27  1.899524e-01  0.114938558 -0.033842212  1.421217e-02 -2.078286e-03
+## var_28 -1.057000e-01  0.020223521 -0.013887626  3.572575e-03  1.210857e-03
+## var_29 -1.610087e-01 -0.027485786  0.052111289 -8.025955e-03  3.577775e-03
+## var_30  6.106008e-02  0.327392290  0.422727256 -2.694729e-02 -8.421697e-03
+## var_31  7.489659e-02 -0.004842869 -0.029592707  1.111320e-03 -3.187380e-03
+## var_32  6.819018e-02 -0.118386896 -0.107012216  6.659137e-03  1.155734e-03
+## var_33 -1.180692e-01  0.455303264 -0.404868100  7.802464e-02 -4.589599e-02
+## var_34 -2.968101e-01  0.410770515 -0.374157470  7.170475e-02 -4.407156e-02
+## var_35  3.123589e-02 -0.226180301  0.345995251  6.419233e-01 -9.335432e-02
+## var_36 -3.668111e-02 -0.033403700 -0.038029087  4.089519e-03 -2.422910e-04
+## var_37  1.335588e-02 -0.052592984  0.014133702 -1.718348e-01 -9.834544e-01</code></pre>
 <pre class="r"><code>DMM_1$rotation[,2] %&gt;% round(2)</code></pre>
-<pre><code>##                            csc_catalog_not_entry 
-##                                             0.33 
-##                            tdp_but_tdp_not_entry 
-##                                             0.15 
-## tire_brand_visit_entry_page_not_tire_brand_visit 
-##                                             0.03 
-##               offers_section_not_financing_visit 
-##                                             0.04 
-##                            x90_day_buy_try_visit 
-##                                             0.01 
-##                           cfna_application_visit 
-##                                             0.00 
-##             credit_card_vendor_click_through_e61 
-##                                             0.00 
-##                            visited_reward_center 
-##                                             0.00 
-##                       page_contains_racing_visit 
-##                                             0.00 
-##                      catalog_search_complete_e10 
-##                                             0.90 
-##                             tire_detail_view_e20 
-##                                             0.13 
-##                               locate_tire_visits 
-##                                             0.05 
-##                              store_dealer_visits 
-##                                             0.05 
-##                          store_search_experiment 
-##                                             0.09 
-##                      individual_store_detail_e40 
-##                                             0.06 
-##                         catalog_sort_change_e110 
-##                                             0.00 
-##                              tire_comparison_e24 
-##                                             0.00 
-##                         tire_fit_interaction_e46 
-##                                             0.12 
-##                           store_detail_click_e38 
-##                                             0.01 
-##                      content_show_hide_click_e35 
-##                                             0.01 
-##                         purchase_at_retailer_e48 
-##                                             0.01 
-##                         tab_navigation_click_e17 
-##                                             0.04 
-##                                  csc_interaction 
-##                                             0.01 
-##                                  tdp_interaction 
-##                                             0.03 
-##                                           stepss 
-##                                             0.06 
-##                                    manual_e4_tdp 
-##                                             0.02 
-##                                    manual_e4_csc 
-##                                             0.04 
-##                                        manual_e4 
-##                                             0.05 
-##                                  video_views_e65 
-##                                             0.01 
-##                                            promo 
-##                                             0.00</code></pre>
+<pre><code>##  var_6  var_7 var_10 var_11 var_12 var_13 var_14 var_15 var_16 var_17 var_18 
+##   0.04  -0.36  -0.03  -0.04  -0.01   0.00   0.00  -0.01   0.00  -0.89  -0.19 
+## var_19 var_20 var_21 var_22 var_23 var_24 var_25 var_26 var_27 var_28 var_29 
+##  -0.05  -0.05  -0.09  -0.06   0.00   0.00  -0.11  -0.01  -0.01  -0.01  -0.04 
+## var_30 var_31 var_32 var_33 var_34 var_35 var_36 var_37 
+##  -0.01  -0.03  -0.06  -0.02  -0.04  -0.05  -0.01   0.00</code></pre>
 </div>
-<div id="step-2-fst-pca-prediction" class="section level1">
-<h1>STEP 2 FST PCA PREDICTION</h1>
+<div id="step-2-qst-pca-prediction" class="section level1">
+<h1>STEP 2 QST PCA PREDICTION</h1>
 <pre class="r"><code>set.seed(123)
-prc_index &lt;- createDataPartition(prc$revenue, p = 0.70, list = FALSE)
+prc_index &lt;- createDataPartition(prc$var_38, p = 0.70, list = FALSE)
 train &lt;- prc[ prc_index, ]
 test &lt;- prc[-prc_index, ]
 tunegrid &lt;- expand.grid(.mtry=1:50)
 
 
-prcfit &lt;- train(revenue ~ .,
+prcfit &lt;- train(var_38 ~ .,
              data = train, 
              method = &quot;rf&quot;,
              metric = &quot;RMSE&quot;,
@@ -683,72 +351,72 @@ prcfit &lt;- train(revenue ~ .,
              tuneGrid = tunegrid)
 
 prcfit$results</code></pre>
-<pre><code>##    mtry      RMSE  Rsquared      MAE   RMSESD RsquaredSD    MAESD
-## 1     1 1066238.6 0.1809250 846818.4 221181.8  0.2018294 192407.1
-## 2     2 1048971.5 0.1336456 828861.2 223463.1  0.1792352 197063.3
-## 3     3 1044666.5 0.1176574 820642.1 217224.9  0.1570167 190103.6
-## 4     4 1030165.6 0.1580477 810552.7 226431.6  0.1930382 193497.2
-## 5     5 1032265.1 0.1494778 813209.7 226837.3  0.2125162 197898.6
-## 6     6 1011352.2 0.1365856 798109.7 237329.1  0.1763463 197979.1
-## 7     7 1005046.9 0.1623259 791618.7 240050.4  0.1996643 200088.1
-## 8     8 1007369.2 0.1563456 793846.9 248106.1  0.2045456 206955.9
-## 9     9  994286.9 0.1852186 782884.6 253777.7  0.2145714 212422.9
-## 10   10  998463.2 0.1592814 788459.5 252980.9  0.2043910 211122.6
-## 11   11  988714.6 0.1906909 778173.3 256845.1  0.2024993 211948.1
-## 12   12  981749.0 0.1817142 778617.8 255940.9  0.1965362 205151.3
-## 13   13  971852.9 0.1812250 769186.0 267958.6  0.1704121 223116.7
-## 14   14  969989.4 0.1925547 766150.7 268730.6  0.2015034 221145.5
-## 15   15  973904.9 0.1797182 769391.2 268679.4  0.1824367 221333.3
-## 16   16  964693.2 0.2149436 762549.6 270591.9  0.2077486 222064.1
-## 17   17  962357.8 0.2030619 761579.7 273585.5  0.1895634 221420.7
-## 18   18  955362.4 0.2111874 753760.3 274609.2  0.1994147 224172.8
-## 19   19  953327.9 0.2239047 753813.5 282286.8  0.2052626 223962.2
-## 20   20  949102.1 0.2138467 749046.6 282484.6  0.1826561 228783.4
-## 21   21  949672.6 0.2225024 749869.6 279223.8  0.2110505 222037.7
-## 22   22  940217.6 0.2354650 746188.1 284306.4  0.2123431 229337.6
-## 23   23  948708.2 0.2307882 748459.4 283781.4  0.2240780 226099.2
-## 24   24  944400.4 0.2223644 745508.7 286099.7  0.2082096 227492.9
-## 25   25  948510.2 0.2182844 751986.1 287158.1  0.1964873 227433.1
-## 26   26  939982.8 0.2325568 743661.1 286768.8  0.2210984 231132.5
-## 27   27  939442.0 0.2135811 740880.1 288099.4  0.2041236 226685.2
-## 28   28  943766.3 0.2287511 746130.1 292567.7  0.2131954 229584.4
-## 29   29  941506.3 0.2244620 748013.4 289669.9  0.2173066 225448.8
-## 30   30  941493.4 0.2388329 746082.5 291203.1  0.2355351 229500.5
-## 31   31  935643.8 0.2178737 742412.3 284727.1  0.2007340 225216.1
-## 32   32  943148.7 0.2315746 749972.0 289917.3  0.2210487 227775.5
-## 33   33  939889.0 0.2187472 745762.2 287171.9  0.2094089 225736.1
-## 34   34  941490.0 0.2403309 747198.5 287962.2  0.2272351 224035.6
-## 35   35  938357.2 0.2268642 744179.1 286922.8  0.2226910 224160.6
-## 36   36  938932.6 0.2305654 747578.9 285954.3  0.2192829 223771.5
-## 37   37  945869.7 0.2172772 750969.0 292190.3  0.1998881 227917.7
-## 38   38  938218.7 0.2294263 746859.8 291297.4  0.2169581 225226.7
-## 39   39  939414.6 0.2239125 744330.0 286329.9  0.2075972 221932.9
-## 40   40  939040.1 0.2216397 746980.5 291409.5  0.1999071 229553.5
-## 41   41  941978.4 0.2233233 749157.6 292954.8  0.1995214 230658.9
-## 42   42  938108.0 0.2332135 747251.8 294372.2  0.2052218 228957.2
-## 43   43  941431.3 0.2253180 746647.5 291264.0  0.2107735 228713.4
-## 44   44  940601.5 0.2121776 745730.9 289506.8  0.2044763 226268.9
-## 45   45  941708.0 0.2418369 750005.9 286084.6  0.2184963 225403.5
-## 46   46  943575.8 0.2181530 748697.9 292256.8  0.2000984 230338.5
-## 47   47  942631.9 0.2215105 746097.0 289262.0  0.2046593 227851.6
-## 48   48  939078.1 0.2221648 747480.8 287742.5  0.2200216 223597.3
-## 49   49  938086.9 0.2369081 745686.4 291778.2  0.2265889 229767.7
-## 50   50  943102.5 0.2176802 748468.1 292011.4  0.2064627 229913.6</code></pre>
+<pre><code>##    mtry    RMSE  Rsquared     MAE   RMSESD RsquaredSD    MAESD
+## 1     1 1627792 0.1706627 1269148 522609.0  0.1493514 233287.6
+## 2     2 1608873 0.1773831 1251236 532092.2  0.1834078 247226.4
+## 3     3 1609233 0.1947599 1252054 536657.2  0.2021006 253689.0
+## 4     4 1617444 0.2021053 1257965 524993.6  0.1926016 250797.8
+## 5     5 1629839 0.2021944 1261267 526371.0  0.2019580 266816.4
+## 6     6 1606179 0.2232630 1241436 536642.9  0.2330013 275437.0
+## 7     7 1620023 0.2044408 1253100 532923.7  0.2356724 282808.0
+## 8     8 1620611 0.2200714 1258868 532486.2  0.2568926 280529.5
+## 9     9 1625631 0.2145184 1250848 538225.4  0.2335797 299026.7
+## 10   10 1614979 0.2135462 1239842 536429.9  0.2469111 286330.4
+## 11   11 1616473 0.2190864 1241207 535599.1  0.2496420 294630.9
+## 12   12 1603881 0.2164129 1226877 537076.9  0.2249164 299792.4
+## 13   13 1621089 0.1967015 1245735 531024.3  0.2214514 289340.2
+## 14   14 1618482 0.2211306 1232195 540706.1  0.2487896 309981.1
+## 15   15 1607619 0.2478290 1235900 544488.3  0.2512171 310325.3
+## 16   16 1623998 0.1998369 1245151 532666.9  0.2180500 299012.2
+## 17   17 1623148 0.2051493 1238622 530400.3  0.2456953 294603.4
+## 18   18 1610562 0.2139158 1233259 541502.3  0.2312988 301324.2
+## 19   19 1604756 0.2319298 1225127 542988.2  0.2338116 306185.0
+## 20   20 1614098 0.2191390 1237170 533520.5  0.2393411 301325.6
+## 21   21 1611321 0.2076435 1230034 544170.4  0.2309331 309218.2
+## 22   22 1612973 0.2111960 1228699 540568.6  0.2345110 314166.7
+## 23   23 1612884 0.2245491 1233500 543111.5  0.2323123 311578.5
+## 24   24 1609141 0.2210046 1234375 545520.4  0.2271112 312540.7
+## 25   25 1612058 0.2068130 1236116 536558.7  0.2201043 300318.6
+## 26   26 1599913 0.2300623 1217160 549956.2  0.2408335 315499.8
+## 27   27 1608119 0.2224154 1232520 553841.9  0.2114036 324199.6
+## 28   28 1599652 0.2309692 1229223 539004.8  0.2260255 305103.4
+## 29   29 1610761 0.2175469 1234416 546041.7  0.2252888 318339.1
+## 30   30 1613438 0.2285710 1231661 551401.6  0.2065561 319593.6
+## 31   31 1599707 0.2199477 1226765 558890.5  0.2204087 321035.7
+## 32   32 1599315 0.2257082 1226515 562357.7  0.2249112 326389.3
+## 33   33 1602501 0.2430465 1224620 558296.8  0.2260639 323450.6
+## 34   34 1610378 0.2292977 1234118 550760.0  0.2301349 316884.5
+## 35   35 1602709 0.2232362 1229496 548654.3  0.2092120 310410.4
+## 36   36 1607907 0.2258710 1234054 552204.6  0.2173359 320090.7
+## 37   37 1601016 0.2216288 1228274 549924.1  0.2212912 315966.1
+## 38   38 1607385 0.2239728 1232070 551590.6  0.2108359 326376.5
+## 39   39 1604351 0.2255685 1228737 549982.4  0.2145505 313823.0
+## 40   40 1602016 0.2260699 1229855 555114.9  0.2221327 319170.3
+## 41   41 1604254 0.2240870 1237321 558798.7  0.2235939 329166.4
+## 42   42 1595469 0.2311920 1223672 550614.5  0.2115380 318802.1
+## 43   43 1602830 0.2054956 1232144 543416.9  0.2077961 306958.2
+## 44   44 1622330 0.2089390 1249877 540600.3  0.2156992 312426.7
+## 45   45 1593415 0.2153609 1218878 556267.1  0.2207807 312344.1
+## 46   46 1612825 0.2140373 1234114 540560.1  0.2221159 313616.4
+## 47   47 1614705 0.2229342 1236519 542762.8  0.2228495 311408.5
+## 48   48 1608032 0.2134166 1235743 549149.8  0.2138321 308921.4
+## 49   49 1606363 0.2318413 1227304 550859.7  0.2321331 314126.8
+## 50   50 1597584 0.2169748 1222467 553105.7  0.2095669 318677.3</code></pre>
 <pre class="r"><code>summary(prcfit$results)</code></pre>
-<pre><code>##       mtry            RMSE            Rsquared           MAE        
-##  Min.   : 1.00   Min.   : 935644   Min.   :0.1177   Min.   :740880  
-##  1st Qu.:13.25   1st Qu.: 940314   1st Qu.:0.1866   1st Qu.:746303  
-##  Median :25.50   Median : 944083   Median :0.2182   Median :749102  
-##  Mean   :25.50   Mean   : 963158   Mean   :0.2062   Mean   :762510  
-##  3rd Qu.:37.75   3rd Qu.: 973392   3rd Qu.:0.2265   3rd Qu.:769340  
-##  Max.   :50.00   Max.   :1066239   Max.   :0.2418   Max.   :846818  
+<pre><code>##       mtry            RMSE            Rsquared           MAE         
+##  Min.   : 1.00   Min.   :1593415   Min.   :0.1707   Min.   :1217160  
+##  1st Qu.:13.25   1st Qu.:1603974   1st Qu.:0.2095   1st Qu.:1228859  
+##  Median :25.50   Median :1609187   Median :0.2195   Median :1234084  
+##  Mean   :25.50   Mean   :1610201   Mean   :0.2169   Mean   :1236345  
+##  3rd Qu.:37.75   3rd Qu.:1614911   3rd Qu.:0.2253   3rd Qu.:1240866  
+##  Max.   :50.00   Max.   :1629839   Max.   :0.2478   Max.   :1269148  
 ##      RMSESD         RsquaredSD         MAESD       
-##  Min.   :217225   Min.   :0.1570   Min.   :190104  
-##  1st Qu.:268139   1st Qu.:0.1997   1st Qu.:221192  
-##  Median :286019   Median :0.2049   Median :224694  
-##  Mean   :274182   Mean   :0.2049   Mean   :220284  
-##  3rd Qu.:289629   3rd Qu.:0.2142   3rd Qu.:227901  
-##  Max.   :294372   Max.   :0.2355   Max.   :231133</code></pre>
+##  Min.   :522609   Min.   :0.1494   Min.   :233288  
+##  1st Qu.:536580   1st Qu.:0.2140   1st Qu.:299016  
+##  Median :543050   Median :0.2232   Median :310368  
+##  Mean   :543270   Mean   :0.2226   Mean   :303061  
+##  3rd Qu.:550724   3rd Qu.:0.2328   3rd Qu.:316655  
+##  Max.   :562358   Max.   :0.2569   Max.   :329166</code></pre>
 <pre class="r"><code>  plot(varImp(prcfit))</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <pre class="r"><code>#### Forecast &amp; MAPE
@@ -756,194 +424,194 @@ prcfit$results</code></pre>
 forecast_test &lt;- data.frame(actual=test, predicted=predict(prcfit,test))
   
     print(forecast_test)</code></pre>
-<pre><code>##    actual.revenue actual.PC1 actual.PC2   actual.PC3 actual.PC4  actual.PC5
-## 2        13094660   1420.960  24900.503  2118.975553   200.8313  1386.71013
-## 7        13479647  -5800.732  15292.484     5.415213   374.3350 -1248.73445
-## 8        10953743  -8310.127  14639.314  1377.718809  1201.4357  -954.81435
-## 15       10852992 -18065.875  -9482.812  -758.479644  -144.4223  -112.08487
-## 17       11873364 -16901.886  -6675.536 -1093.873442  -551.0028    80.69234
-## 19       12675352 -16513.274 -16050.949   516.820916   647.1531   317.23156
-## 23       12395256   5453.030 -14947.858   669.034443   566.7766   337.39506
-## 28       11626890  35225.294  -5708.971  -723.981929  -178.1582  -220.97383
-##     actual.PC6 actual.PC7 actual.PC8 actual.PC9 actual.PC10 actual.PC11
-## 2   -298.44173   311.0976  202.87859 -292.17585    14.92794  -319.46421
-## 7  -1932.88397   668.1014  120.50743  212.71714   -27.13083   -67.15944
-## 8    972.82021  -216.8341 -194.23781  249.19679  -281.40722   -95.32987
-## 15   397.08932   397.1331 -179.23071  130.48752   109.78966  -281.64422
-## 17   158.67146   150.1205  201.95318  -14.28554  -110.04225   165.82559
-## 19  -356.18549  -256.8920   39.82324   23.38595    14.35839   142.90161
-## 23   176.07847  -219.4394  -23.64777  -10.85603   -68.86960   -16.82513
-## 28   -67.59124   285.0257  313.46940   81.88158    36.77236    67.10601
+<pre><code>##    actual.var_38  actual.PC1 actual.PC2 actual.PC3 actual.PC4 actual.PC5
+## 2       13094660    647.4398 -25474.920 -2256.6847  239.69148   558.4354
+## 8       13479647  -8213.5205 -14701.933   232.2777   88.26957  -864.8146
+## 9       10953743 -10507.3076 -14393.919 -1996.7444 -693.04227  -720.5918
+## 16      10852992 -22542.9271  10486.150   222.4180 -584.69250   859.4453
+## 18      11873364 -21540.1265   7865.062   864.6976 -187.97769   907.9271
+## 21      12675352 -19194.3470  16785.932  -640.6599 -329.84165  -412.1988
+## 25      12395256   9665.8232  14868.229  -931.3207 -389.47765  -180.8251
+## 30      11626890  47162.5624   4800.611   318.2281 -486.10531   563.9753
+##    actual.PC6 actual.PC7 actual.PC8   actual.PC9 actual.PC10 actual.PC11
+## 2   1005.2530  335.90192 -253.22175    0.1047369    84.29595   114.86734
+## 8   -542.3567 2134.49117  151.01535 -296.8975049    15.31494   -63.93510
+## 9  -1086.8136 -653.03341  160.42307  -80.5398783   213.01169    33.58725
+## 16  -391.6009   72.16141 -158.06321 -313.6314852   286.26917  -189.51958
+## 18  -157.6949  117.57934   93.56274   68.6954191   -90.06168   117.10928
+## 21   361.0906  137.51589   28.33093  252.7184038   -66.61915  -110.81415
+## 25   309.4309 -312.81545   36.64083   58.1602405    35.86309   122.74444
+## 30  -262.6966  427.67574  349.76406  -93.5071320   -87.19857   -45.81334
 ##    actual.PC12 actual.PC13 actual.PC14 actual.PC15 actual.PC16 actual.PC17
-## 2    109.78161    4.272100   36.715738   -2.983480    23.94027   -10.05481
-## 7     54.76516  -67.957699   12.616808   -3.015262    12.80753   -40.05349
-## 8    109.03593  -36.117526 -175.778440    2.573713    33.24957    27.42647
-## 15    -4.03100   -3.625008  -45.460998 -100.141266    49.70115   -50.50822
-## 17    49.14614  190.671582    6.079757  -22.018809    88.11886   -19.74844
-## 19   270.99949  -18.601544    3.526309  -34.078645   -35.20062    12.73876
-## 23  -246.44527 -113.093073  -41.181779  124.324770    61.11645   -69.95636
-## 28   -15.68256  174.749121   39.959319  -13.898424   -55.53323   -29.79533
-##     actual.PC18 actual.PC19 actual.PC20 actual.PC21 actual.PC22 actual.PC23
-## 2   -2.89123157  -14.075267   11.607289 -12.8595447    3.868498   -7.590283
-## 7   -8.75660441    3.883838  -25.178200   7.5800050   -5.470787    3.650154
-## 8  -21.19085848  -37.821929    6.373633  19.6628078    5.857125    7.669370
-## 15  14.73263087    2.603776   18.744595  10.2852650   21.078493  -11.445045
-## 17 -55.23180957    6.561485   45.250989  21.1224234  -27.003502   -1.080551
-## 19  16.88972551   27.192715    1.555680   5.1117303    5.184595    1.684363
-## 23 -20.09711279   13.268679  -13.837145   0.8569894  -11.650488  -17.975818
-## 28   0.04751484  -44.305553   -5.519228  36.5965840   11.965808   -2.514031
-##    actual.PC24 actual.PC25 actual.PC26 actual.PC27 actual.PC28   actual.PC29
-## 2   -0.9103656  -9.6691999 -1.25215458  -1.0625887 -0.34860996 -5.473400e-13
-## 7   -6.5277552   2.8923571  0.91829993  -0.4270433  0.06668576 -1.443290e-14
-## 8   -1.1103667  -3.1822275  0.34660418   0.2523004 -0.53486275 -5.856426e-13
-## 15  10.0116019  10.3886036 -1.62929157   0.5579778  0.95677389  1.887379e-14
-## 17   1.7992591   0.9137054 -0.30667123  -1.2415394 -0.40618047 -4.602985e-13
-## 19  19.7248695  -4.9113829  2.79265979  -1.0666537  0.71478268  2.797762e-13
-## 23  -1.3190813  -5.7069882  2.31711025   0.6715014  0.58766451  4.783951e-13
-## 28   5.2345676 -13.6547404 -0.00805663   1.8152165 -0.06144562  5.997980e-13
-##    predicted
-## 2   12989680
-## 7   12871443
-## 8   13049316
-## 15  11508756
-## 17  11437880
-## 19  11850572
-## 23  11765081
-## 28  11488377</code></pre>
-<pre class="r"><code>RMSE(forecast_test$actual.revenue, forecast_test$predicted) </code></pre>
-<pre><code>## [1] 900597.1</code></pre>
-<pre class="r"><code>MAPE &lt;- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+## 2     57.83241    47.90649   79.524684  -47.834287   14.013367 -22.9489437
+## 8    -67.71526    80.82853   -4.104253  -24.517650   -9.803556  -0.4260296
+## 9   -282.67734    88.76259   83.987985  133.602769   38.707773  15.3508202
+## 16   -38.40229    25.36687  -56.498385   46.270648   38.526657  14.8800635
+## 18  -161.55191  -176.40441    2.929076  -53.520584   79.869515  16.9480139
+## 21  -209.09091    64.30928   45.943274  -22.514601  -69.745842 -43.1392782
+## 25   173.96303   125.03276  -20.059355  -14.403779   54.654537  63.5869511
+## 30    52.78031  -193.14013    1.737332   -5.697125  -71.725858  37.2432712
+##    actual.PC18 actual.PC19 actual.PC20 actual.PC21 actual.PC22 actual.PC23
+## 2     5.467628  -11.973870    6.599999  -20.430373 -10.8875749    1.440474
+## 8   -25.029857   -5.309308   29.912997    5.646267  -2.1867985   -5.277829
+## 9    -3.292896   49.396410    6.235989   -3.797611  -6.5876797    3.495465
+## 16  -31.491626  -29.743607   -1.025584  -14.393891  12.9008952   26.467029
+## 18  -50.289408   30.477205  -16.763925  -33.300518  -7.3342843  -22.319657
+## 21   22.827952  -10.884791  -11.809374  -17.880686   5.2207532    7.151323
+## 25  -72.967752   -8.469638   14.953509   13.254650   6.1025815  -14.830933
+## 30    7.389080   31.615410   25.092204  -23.657705   0.8080943    7.956589
+##    actual.PC24 actual.PC25 actual.PC26  actual.PC27 actual.PC28 actual.PC29
+## 2    -6.349268   7.5803340  -9.1489743  0.008814464  -0.1589082  0.08767676
+## 8     3.970636  -5.1348539   0.2526779 -0.786129228   0.1594706 -0.10343414
+## 9    -4.615702  -0.8455567  -0.2170192  0.027565137  -0.5033159 -0.11863307
+## 16    9.918288   0.9597078  -0.3255387  1.443656327   0.8337846  0.32975984
+## 18   -2.204865  -5.0123869   1.1688719 -0.586015507  -0.6307888  0.16838884
+## 21  -15.315281   6.1458591   6.0604521 -1.213921756   1.2602970  0.06721598
+## 25    4.922422  16.9727958   2.3933536 -0.171448888   1.0237556 -0.15907821
+## 30   -8.796112  10.5953080   0.3482075  1.770393897   0.4055260 -0.15073097
+##     actual.PC30 predicted
+## 2   0.047623189  12804078
+## 8   0.049379112  12959999
+## 9  -0.031769523  12980964
+## 16 -0.005219862  12385345
+## 18  0.094202315  12564756
+## 21  0.188740809  12436175
+## 25  0.053224285  12801836
+## 30 -0.188772994  12323825</code></pre>
+<pre class="r"><code>RMSE(forecast_test$actual.var_38, forecast_test$predicted) </code></pre>
+<pre><code>## [1] 999903.4</code></pre>
+<pre class="r"><code>MAPE &lt;- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
     MAPE</code></pre>
-<pre><code>## [1] 5.867136</code></pre>
+<pre><code>## [1] 6.960589</code></pre>
 <pre class="r"><code>summary(test)</code></pre>
-<pre><code>##     revenue              PC1              PC2                PC3         
-##  Min.   :10852992   Min.   :-18066   Min.   :-16050.9   Min.   :-1093.9  
-##  1st Qu.:11458603   1st Qu.:-16610   1st Qu.:-10849.1   1st Qu.: -732.6  
-##  Median :12134310   Median : -7055   Median : -6192.3   Median :  261.1  
-##  Mean   :12118988   Mean   : -2937   Mean   :   245.8   Mean   :  264.0  
-##  3rd Qu.:12780179   3rd Qu.:  2429   3rd Qu.: 14802.6   3rd Qu.:  846.2  
-##  Max.   :13479647   Max.   : 35225   Max.   : 24900.5   Max.   : 2119.0  
-##       PC4              PC5                PC6                PC7        
-##  Min.   :-551.0   Min.   :-1248.73   Min.   :-1932.88   Min.   :-256.9  
-##  1st Qu.:-152.9   1st Qu.: -404.43   1st Qu.: -312.88   1st Qu.:-217.5  
-##  Median : 287.6   Median :  -15.70   Median :   45.54   Median : 217.6  
-##  Mean   : 264.6   Mean   :  -51.82   Mean   : -118.81   Mean   : 139.8  
-##  3rd Qu.: 586.9   3rd Qu.:  322.27   3rd Qu.:  231.33   3rd Qu.: 332.6  
-##  Max.   :1201.4   Max.   : 1386.71   Max.   :  972.82   Max.   : 668.1  
-##       PC8               PC9               PC10               PC11        
-##  Min.   :-194.24   Min.   :-292.18   Min.   :-281.407   Min.   :-319.46  
-##  1st Qu.: -62.54   1st Qu.: -11.71   1st Qu.: -79.163   1st Qu.:-141.91  
-##  Median :  80.17   Median :  52.63   Median :  -6.386   Median : -41.99  
-##  Mean   :  60.19   Mean   :  47.54   Mean   : -38.950   Mean   : -50.57  
-##  3rd Qu.: 202.18   3rd Qu.: 151.04   3rd Qu.:  20.389   3rd Qu.:  86.05  
-##  Max.   : 313.47   Max.   : 249.20   Max.   : 109.790   Max.   : 165.83  
-##       PC12               PC13              PC14               PC15         
-##  Min.   :-246.445   Min.   :-113.09   Min.   :-175.778   Min.   :-100.141  
-##  1st Qu.:  -6.944   1st Qu.: -44.08   1st Qu.: -42.252   1st Qu.: -25.034  
-##  Median :  51.956   Median : -11.11   Median :   4.803   Median :  -8.457  
-##  Mean   :  40.946   Mean   :  16.29   Mean   : -20.440   Mean   :  -6.155  
-##  3rd Qu.: 109.222   3rd Qu.:  46.89   3rd Qu.:  18.642   3rd Qu.:  -1.594  
-##  Max.   : 270.999   Max.   : 190.67   Max.   :  39.959   Max.   : 124.325  
-##       PC16               PC17              PC18              PC19        
-##  Min.   :-55.5332   Min.   :-69.956   Min.   :-55.232   Min.   :-44.306  
-##  1st Qu.:  0.8055   1st Qu.:-42.667   1st Qu.:-20.371   1st Qu.:-20.012  
-##  Median : 28.5949   Median :-24.772   Median : -5.824   Median :  3.244  
-##  Mean   : 22.2750   Mean   :-22.494   Mean   : -9.562   Mean   : -5.337  
-##  3rd Qu.: 52.5550   3rd Qu.: -4.356   3rd Qu.:  3.719   3rd Qu.:  8.238  
-##  Max.   : 88.1189   Max.   : 27.426   Max.   : 16.890   Max.   : 27.193  
-##       PC20              PC21              PC22               PC23        
-##  Min.   :-25.178   Min.   :-12.860   Min.   :-27.0035   Min.   :-17.976  
-##  1st Qu.: -7.599   1st Qu.:  4.048   1st Qu.: -7.0157   1st Qu.: -8.554  
-##  Median :  3.965   Median :  8.933   Median :  4.5265   Median : -1.797  
-##  Mean   :  4.875   Mean   : 11.045   Mean   :  0.4787   Mean   : -3.450  
-##  3rd Qu.: 13.392   3rd Qu.: 20.028   3rd Qu.:  7.3843   3rd Qu.:  2.176  
-##  Max.   : 45.251   Max.   : 36.597   Max.   : 21.0785   Max.   :  7.669  
-##       PC24              PC25              PC26              PC27         
-##  Min.   :-6.5278   Min.   :-13.655   Min.   :-1.6293   Min.   :-1.24154  
-##  1st Qu.:-1.1625   1st Qu.: -6.698   1st Qu.:-0.5430   1st Qu.:-1.06360  
-##  Median : 0.4444   Median : -4.047   Median : 0.1693   Median :-0.08737  
-##  Mean   : 3.3628   Mean   : -2.866   Mean   : 0.3973   Mean   :-0.06260  
-##  3rd Qu.: 6.4288   3rd Qu.:  1.408   3rd Qu.: 1.2680   3rd Qu.: 0.58636  
-##  Max.   :19.7249   Max.   : 10.389   Max.   : 2.7927   Max.   : 1.81522  
-##       PC28               PC29           
-##  Min.   :-0.53486   Min.   :-5.856e-13  
-##  1st Qu.:-0.36300   1st Qu.:-4.821e-13  
-##  Median : 0.00262   Median : 2.220e-15  
-##  Mean   : 0.12185   Mean   :-2.886e-14  
-##  3rd Qu.: 0.61944   3rd Qu.: 3.294e-13  
-##  Max.   : 0.95677   Max.   : 5.998e-13</code></pre>
+<pre><code>##      var_38              PC1              PC2                PC3         
+##  Min.   :10852992   Min.   :-22543   Min.   :-25474.9   Min.   :-2256.7  
+##  1st Qu.:11458603   1st Qu.:-19781   1st Qu.:-14470.9   1st Qu.:-1197.7  
+##  Median :12134310   Median : -9360   Median :  6332.8   Median : -209.1  
+##  Mean   :12118988   Mean   : -3065   Mean   :    29.4   Mean   : -523.5  
+##  3rd Qu.:12780179   3rd Qu.:  2902   3rd Qu.: 11581.7   3rd Qu.:  253.8  
+##  Max.   :13479647   Max.   : 47163   Max.   : 16785.9   Max.   :  864.7  
+##       PC4              PC5               PC6                PC7         
+##  Min.   :-693.0   Min.   :-864.81   Min.   :-1086.81   Min.   :-653.03  
+##  1st Qu.:-510.8   1st Qu.:-489.30   1st Qu.: -429.29   1st Qu.: -24.08  
+##  Median :-359.7   Median : 188.81   Median : -210.20   Median : 127.55  
+##  Mean   :-292.9   Mean   :  88.92   Mean   :  -95.67   Mean   : 282.43  
+##  3rd Qu.:-118.9   3rd Qu.: 637.84   3rd Qu.:  322.35   3rd Qu.: 358.85  
+##  Max.   : 239.7   Max.   : 907.93   Max.   : 1005.25   Max.   :2134.49  
+##       PC8               PC9               PC10             PC11         
+##  Min.   :-253.22   Min.   :-313.63   Min.   :-90.06   Min.   :-189.520  
+##  1st Qu.: -18.27   1st Qu.:-144.35   1st Qu.:-71.76   1st Qu.: -75.655  
+##  Median :  65.10   Median : -40.22   Median : 25.59   Median :  -6.113  
+##  Mean   :  51.06   Mean   : -50.61   Mean   : 48.86   Mean   :  -2.722  
+##  3rd Qu.: 153.37   3rd Qu.:  60.79   3rd Qu.:116.47   3rd Qu.: 115.428  
+##  Max.   : 349.76   Max.   : 252.72   Max.   :286.27   Max.   : 122.744  
+##       PC12              PC13               PC14              PC15        
+##  Min.   :-282.68   Min.   :-193.140   Min.   :-56.498   Min.   :-53.521  
+##  1st Qu.:-173.44   1st Qu.: -25.076   1st Qu.: -8.093   1st Qu.:-30.347  
+##  Median : -53.06   Median :  56.108   Median :  2.333   Median :-18.459  
+##  Mean   : -59.36   Mean   :   7.833   Mean   : 16.683   Mean   :  1.423  
+##  3rd Qu.:  54.04   3rd Qu.:  82.812   3rd Qu.: 54.339   3rd Qu.:  7.295  
+##  Max.   : 173.96   Max.   : 125.033   Max.   : 83.988   Max.   :133.603  
+##       PC16              PC17              PC18              PC19        
+##  Min.   :-71.726   Min.   :-43.139   Min.   :-72.968   Min.   :-29.744  
+##  1st Qu.:-24.789   1st Qu.: -6.057   1st Qu.:-36.191   1st Qu.:-11.157  
+##  Median : 26.270   Median : 15.115   Median :-14.161   Median : -6.889  
+##  Mean   :  9.312   Mean   : 10.187   Mean   :-18.423   Mean   :  5.638  
+##  3rd Qu.: 42.694   3rd Qu.: 22.022   3rd Qu.:  5.948   3rd Qu.: 30.762  
+##  Max.   : 79.870   Max.   : 63.587   Max.   : 22.828   Max.   : 49.396  
+##       PC20              PC21              PC22               PC23         
+##  Min.   :-16.764   Min.   :-33.301   Min.   :-10.8876   Min.   :-22.3197  
+##  1st Qu.: -3.722   1st Qu.:-21.237   1st Qu.: -6.7743   1st Qu.: -7.6661  
+##  Median :  6.418   Median :-16.137   Median : -0.6894   Median :  2.4680  
+##  Mean   :  6.649   Mean   :-11.820   Mean   : -0.2455   Mean   :  0.5103  
+##  3rd Qu.: 17.488   3rd Qu.: -1.437   3rd Qu.:  5.4412   3rd Qu.:  7.3526  
+##  Max.   : 29.913   Max.   : 13.255   Max.   : 12.9009   Max.   : 26.4670  
+##       PC24              PC25             PC26              PC27         
+##  Min.   :-15.315   Min.   :-5.135   Min.   :-9.1490   Min.   :-1.21392  
+##  1st Qu.: -6.961   1st Qu.:-1.887   1st Qu.:-0.2441   1st Qu.:-0.63604  
+##  Median : -3.410   Median : 3.553   Median : 0.3004   Median :-0.08132  
+##  Mean   : -2.309   Mean   : 3.908   Mean   : 0.0665   Mean   : 0.06161  
+##  3rd Qu.:  4.209   3rd Qu.: 8.334   3rd Qu.: 1.4750   3rd Qu.: 0.38159  
+##  Max.   :  9.918   Max.   :16.973   Max.   : 6.0605   Max.   : 1.77039  
+##       PC28              PC29               PC30         
+##  Min.   :-0.6308   Min.   :-0.15908   Min.   :-0.18877  
+##  1st Qu.:-0.2450   1st Qu.:-0.12666   1st Qu.:-0.01186  
+##  Median : 0.2825   Median :-0.01811   Median : 0.04850  
+##  Mean   : 0.2987   Mean   : 0.01515   Mean   : 0.02593  
+##  3rd Qu.: 0.8813   3rd Qu.: 0.10785   3rd Qu.: 0.06347  
+##  Max.   : 1.2603   Max.   : 0.32976   Max.   : 0.18874</code></pre>
 <pre class="r"><code>forecast_test &lt;- data.frame(actual=test, predicted=predict(prcfit,test))
 
-forecast_test %&gt;% dplyr::select(c(actual.revenue,predicted)) %&gt;% 
+forecast_test %&gt;% dplyr::select(c(actual.var_38,predicted)) %&gt;% 
   ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
   theme_fivethirtyeight(base_size = 12, base_family = &quot;sans&quot;)+
-  geom_point(aes(y = actual.revenue), color = &quot;blue&quot;) + 
+  geom_point(aes(y = actual.var_38), color = &quot;blue&quot;) + 
   geom_point(aes(y = predicted), color = &#39;red&#39;) + 
   geom_line(aes(y = predicted), color = &#39;red&#39;)+ 
-  geom_line(aes(y = actual.revenue), color = &#39;blue&#39;) +
-    labs(title = &quot;Actual Revenue (Blue) vs. Predicted Revenue (Red)&quot;)+ 
+  geom_line(aes(y = actual.var_38), color = &#39;blue&#39;) +
+    labs(title = &quot;Actual var_38 (Blue) vs. Predicted var_38 (Red)&quot;)+ 
     expand_limits(x = 0, y = 8000000)+ 
     scale_y_continuous(labels = scales::dollar_format())+
     scale_x_continuous(labels = number_format(accuracy = 1))</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
 <pre class="r"><code>    print(forecast_test)</code></pre>
-<pre><code>##    actual.revenue actual.PC1 actual.PC2   actual.PC3 actual.PC4  actual.PC5
-## 2        13094660   1420.960  24900.503  2118.975553   200.8313  1386.71013
-## 7        13479647  -5800.732  15292.484     5.415213   374.3350 -1248.73445
-## 8        10953743  -8310.127  14639.314  1377.718809  1201.4357  -954.81435
-## 15       10852992 -18065.875  -9482.812  -758.479644  -144.4223  -112.08487
-## 17       11873364 -16901.886  -6675.536 -1093.873442  -551.0028    80.69234
-## 19       12675352 -16513.274 -16050.949   516.820916   647.1531   317.23156
-## 23       12395256   5453.030 -14947.858   669.034443   566.7766   337.39506
-## 28       11626890  35225.294  -5708.971  -723.981929  -178.1582  -220.97383
-##     actual.PC6 actual.PC7 actual.PC8 actual.PC9 actual.PC10 actual.PC11
-## 2   -298.44173   311.0976  202.87859 -292.17585    14.92794  -319.46421
-## 7  -1932.88397   668.1014  120.50743  212.71714   -27.13083   -67.15944
-## 8    972.82021  -216.8341 -194.23781  249.19679  -281.40722   -95.32987
-## 15   397.08932   397.1331 -179.23071  130.48752   109.78966  -281.64422
-## 17   158.67146   150.1205  201.95318  -14.28554  -110.04225   165.82559
-## 19  -356.18549  -256.8920   39.82324   23.38595    14.35839   142.90161
-## 23   176.07847  -219.4394  -23.64777  -10.85603   -68.86960   -16.82513
-## 28   -67.59124   285.0257  313.46940   81.88158    36.77236    67.10601
+<pre><code>##    actual.var_38  actual.PC1 actual.PC2 actual.PC3 actual.PC4 actual.PC5
+## 2       13094660    647.4398 -25474.920 -2256.6847  239.69148   558.4354
+## 8       13479647  -8213.5205 -14701.933   232.2777   88.26957  -864.8146
+## 9       10953743 -10507.3076 -14393.919 -1996.7444 -693.04227  -720.5918
+## 16      10852992 -22542.9271  10486.150   222.4180 -584.69250   859.4453
+## 18      11873364 -21540.1265   7865.062   864.6976 -187.97769   907.9271
+## 21      12675352 -19194.3470  16785.932  -640.6599 -329.84165  -412.1988
+## 25      12395256   9665.8232  14868.229  -931.3207 -389.47765  -180.8251
+## 30      11626890  47162.5624   4800.611   318.2281 -486.10531   563.9753
+##    actual.PC6 actual.PC7 actual.PC8   actual.PC9 actual.PC10 actual.PC11
+## 2   1005.2530  335.90192 -253.22175    0.1047369    84.29595   114.86734
+## 8   -542.3567 2134.49117  151.01535 -296.8975049    15.31494   -63.93510
+## 9  -1086.8136 -653.03341  160.42307  -80.5398783   213.01169    33.58725
+## 16  -391.6009   72.16141 -158.06321 -313.6314852   286.26917  -189.51958
+## 18  -157.6949  117.57934   93.56274   68.6954191   -90.06168   117.10928
+## 21   361.0906  137.51589   28.33093  252.7184038   -66.61915  -110.81415
+## 25   309.4309 -312.81545   36.64083   58.1602405    35.86309   122.74444
+## 30  -262.6966  427.67574  349.76406  -93.5071320   -87.19857   -45.81334
 ##    actual.PC12 actual.PC13 actual.PC14 actual.PC15 actual.PC16 actual.PC17
-## 2    109.78161    4.272100   36.715738   -2.983480    23.94027   -10.05481
-## 7     54.76516  -67.957699   12.616808   -3.015262    12.80753   -40.05349
-## 8    109.03593  -36.117526 -175.778440    2.573713    33.24957    27.42647
-## 15    -4.03100   -3.625008  -45.460998 -100.141266    49.70115   -50.50822
-## 17    49.14614  190.671582    6.079757  -22.018809    88.11886   -19.74844
-## 19   270.99949  -18.601544    3.526309  -34.078645   -35.20062    12.73876
-## 23  -246.44527 -113.093073  -41.181779  124.324770    61.11645   -69.95636
-## 28   -15.68256  174.749121   39.959319  -13.898424   -55.53323   -29.79533
-##     actual.PC18 actual.PC19 actual.PC20 actual.PC21 actual.PC22 actual.PC23
-## 2   -2.89123157  -14.075267   11.607289 -12.8595447    3.868498   -7.590283
-## 7   -8.75660441    3.883838  -25.178200   7.5800050   -5.470787    3.650154
-## 8  -21.19085848  -37.821929    6.373633  19.6628078    5.857125    7.669370
-## 15  14.73263087    2.603776   18.744595  10.2852650   21.078493  -11.445045
-## 17 -55.23180957    6.561485   45.250989  21.1224234  -27.003502   -1.080551
-## 19  16.88972551   27.192715    1.555680   5.1117303    5.184595    1.684363
-## 23 -20.09711279   13.268679  -13.837145   0.8569894  -11.650488  -17.975818
-## 28   0.04751484  -44.305553   -5.519228  36.5965840   11.965808   -2.514031
-##    actual.PC24 actual.PC25 actual.PC26 actual.PC27 actual.PC28   actual.PC29
-## 2   -0.9103656  -9.6691999 -1.25215458  -1.0625887 -0.34860996 -5.473400e-13
-## 7   -6.5277552   2.8923571  0.91829993  -0.4270433  0.06668576 -1.443290e-14
-## 8   -1.1103667  -3.1822275  0.34660418   0.2523004 -0.53486275 -5.856426e-13
-## 15  10.0116019  10.3886036 -1.62929157   0.5579778  0.95677389  1.887379e-14
-## 17   1.7992591   0.9137054 -0.30667123  -1.2415394 -0.40618047 -4.602985e-13
-## 19  19.7248695  -4.9113829  2.79265979  -1.0666537  0.71478268  2.797762e-13
-## 23  -1.3190813  -5.7069882  2.31711025   0.6715014  0.58766451  4.783951e-13
-## 28   5.2345676 -13.6547404 -0.00805663   1.8152165 -0.06144562  5.997980e-13
-##    predicted
-## 2   12989680
-## 7   12871443
-## 8   13049316
-## 15  11508756
-## 17  11437880
-## 19  11850572
-## 23  11765081
-## 28  11488377</code></pre>
-<pre class="r"><code>  RMSE(forecast_test$actual.revenue, forecast_test$predicted) </code></pre>
-<pre><code>## [1] 900597.1</code></pre>
-<pre class="r"><code>  MAPE &lt;- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+## 2     57.83241    47.90649   79.524684  -47.834287   14.013367 -22.9489437
+## 8    -67.71526    80.82853   -4.104253  -24.517650   -9.803556  -0.4260296
+## 9   -282.67734    88.76259   83.987985  133.602769   38.707773  15.3508202
+## 16   -38.40229    25.36687  -56.498385   46.270648   38.526657  14.8800635
+## 18  -161.55191  -176.40441    2.929076  -53.520584   79.869515  16.9480139
+## 21  -209.09091    64.30928   45.943274  -22.514601  -69.745842 -43.1392782
+## 25   173.96303   125.03276  -20.059355  -14.403779   54.654537  63.5869511
+## 30    52.78031  -193.14013    1.737332   -5.697125  -71.725858  37.2432712
+##    actual.PC18 actual.PC19 actual.PC20 actual.PC21 actual.PC22 actual.PC23
+## 2     5.467628  -11.973870    6.599999  -20.430373 -10.8875749    1.440474
+## 8   -25.029857   -5.309308   29.912997    5.646267  -2.1867985   -5.277829
+## 9    -3.292896   49.396410    6.235989   -3.797611  -6.5876797    3.495465
+## 16  -31.491626  -29.743607   -1.025584  -14.393891  12.9008952   26.467029
+## 18  -50.289408   30.477205  -16.763925  -33.300518  -7.3342843  -22.319657
+## 21   22.827952  -10.884791  -11.809374  -17.880686   5.2207532    7.151323
+## 25  -72.967752   -8.469638   14.953509   13.254650   6.1025815  -14.830933
+## 30    7.389080   31.615410   25.092204  -23.657705   0.8080943    7.956589
+##    actual.PC24 actual.PC25 actual.PC26  actual.PC27 actual.PC28 actual.PC29
+## 2    -6.349268   7.5803340  -9.1489743  0.008814464  -0.1589082  0.08767676
+## 8     3.970636  -5.1348539   0.2526779 -0.786129228   0.1594706 -0.10343414
+## 9    -4.615702  -0.8455567  -0.2170192  0.027565137  -0.5033159 -0.11863307
+## 16    9.918288   0.9597078  -0.3255387  1.443656327   0.8337846  0.32975984
+## 18   -2.204865  -5.0123869   1.1688719 -0.586015507  -0.6307888  0.16838884
+## 21  -15.315281   6.1458591   6.0604521 -1.213921756   1.2602970  0.06721598
+## 25    4.922422  16.9727958   2.3933536 -0.171448888   1.0237556 -0.15907821
+## 30   -8.796112  10.5953080   0.3482075  1.770393897   0.4055260 -0.15073097
+##     actual.PC30 predicted
+## 2   0.047623189  12804078
+## 8   0.049379112  12959999
+## 9  -0.031769523  12980964
+## 16 -0.005219862  12385345
+## 18  0.094202315  12564756
+## 21  0.188740809  12436175
+## 25  0.053224285  12801836
+## 30 -0.188772994  12323825</code></pre>
+<pre class="r"><code>  RMSE(forecast_test$actual.var_38, forecast_test$predicted) </code></pre>
+<pre><code>## [1] 999903.4</code></pre>
+<pre class="r"><code>  MAPE &lt;- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
     MAPE</code></pre>
-<pre><code>## [1] 5.867136</code></pre>
+<pre><code>## [1] 6.960589</code></pre>
 </div>
