@@ -3,8 +3,7 @@ title: EDA
 author: Jullian Schrup
 date: '2022-06-25'
 slug: eda
-categories: []
-tags: []
+
 ---
 
 ```{r setup, message=FALSE, warning=FALSE}
@@ -47,7 +46,9 @@ FST <- dplyr::select(FST, -c(entry_page_home_page, entry_page_includes_size, ent
 
 
 ```
+
 # STEP 1: PCA - FACTOR ANALYSIS" FST
+
 ```{r}
 
 DMM <- FST %>% filter(promo == 0) %>% dplyr::select(-c(brand,region,week,revenue))
@@ -86,7 +87,9 @@ print(ncol(DMM_1))
 DMM_1$rotation
 DMM_1$rotation[,2] %>% round(2)
 ```
+
 # STEP 2 FST PCA PREDICTION
+
 ```{r}
 set.seed(123)
 prc_index <- createDataPartition(prc$revenue, p = 0.70, list = FALSE)
