@@ -5,7 +5,7 @@ date: '2022-06-25'
 slug: eda
 categories:
   - R
-tags: []
+
 ---
 
 ```{r setup, message=FALSE, warning=FALSE}
@@ -36,34 +36,33 @@ library(readxl)
 library(blogdown)
 
 
-DMM_2022_Data_BST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - BST - Used (10).csv")
-DMM_2022_Data_FST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - FST - Used.csv")
-HiddenData <- read.csv("C:/Users/julli/Downloads/DMM_CSV_2Weeks.csv")
-HiddenFST <- read.csv("C:/Users/julli/Downloads/HiddenFST.csv")
-BST <- clean_names(DMM_2022_Data_BST_Used)
-BST <- dplyr::select(BST, -c(entry_page_home_page, entry_page_includes_size, entry_page_includes_tire_type, entry_page_includes_vehicles, entry_page_includes_tire_brands, tdp_entry, csc_entry))
+DMM_2022_Data_Used <- read.csv("C:/Users/julli/Downloads/Masked_Data.csv")
+DMM_2022_Data_Used2 <- read.csv("C:/Users/julli/Downloads/MaskedData2.csv")
 
-FST <- clean_names(DMM_2022_Data_FST_Used)
-FST <- dplyr::select(FST, -c(entry_page_home_page, entry_page_includes_size, entry_page_includes_tire_type, entry_page_includes_vehicles, entry_page_includes_tire_brands, tdp_entry, csc_entry))
+RST <- clean_names(DMM_2022_Data_Used)
+RST <- dplyr::select(RST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
+
+QST <- clean_names(DMM_2022_Data_Used2)
+QST <- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
 
 
 ```
 
-# STEP 1: PCA - FACTOR ANALYSIS" FST
+# STEP 1: PCA - FACTOR ANALYSIS" QST
 
 ```{r}
 
-DMM <- FST %>% filter(promo == 0) %>% dplyr::select(-c(brand,region,week,revenue))
+DMM <- QST %>% dplyr::select(-c(week,var_38))
 
 ## FACTOR
 
 DMM_1 <- prcomp(x = DMM)
 screeplot(DMM_1, type = "lines") ## We want to cutoff the screeplot at 4 factors
 
-prc <- bind_cols(dplyr::select(FST %>% filter(promo == 0),revenue),as.data.frame(DMM_1$x))
+prc <- bind_cols(dplyr::select(QST, var_38),as.data.frame(DMM_1$x))
 
-# Correlation with Revenue
-correlationmatrix <- cor(x = prc, y = prc$revenue) 
+# Correlation with var_38
+correlationmatrix <- cor(x = prc, y = prc$var_38) 
 correlationmatrix
 
 filteredcorrelations <- as.data.frame(apply(correlationmatrix, 2, function(x) ifelse (abs(x) >=0.10, round(x,3), "-")))
@@ -81,7 +80,7 @@ ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   coord_fixed()
 
 
-# Finding most correlated PCA - for FST, it's Component 2.
+# Finding most correlated PCA - for QST, it's Component 2.
 biplot(DMM_1, choices = c(1,2))
 
 
@@ -90,17 +89,17 @@ DMM_1$rotation
 DMM_1$rotation[,2] %>% round(2)
 ```
 
-# STEP 2 FST PCA PREDICTION
+# STEP 2 QST PCA PREDICTION
 
 ```{r}
 set.seed(123)
-prc_index <- createDataPartition(prc$revenue, p = 0.70, list = FALSE)
+prc_index <- createDataPartition(prc$var_38, p = 0.70, list = FALSE)
 train <- prc[ prc_index, ]
 test <- prc[-prc_index, ]
 tunegrid <- expand.grid(.mtry=1:50)
 
 
-prcfit <- train(revenue ~ .,
+prcfit <- train(var_38 ~ .,
              data = train, 
              method = "rf",
              metric = "RMSE",
@@ -120,8 +119,8 @@ forecast_test <- data.frame(actual=test, predicted=predict(prcfit,test))
     print(forecast_test)
     
   
-RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
-MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+RMSE(forecast_test$actual.var_38, forecast_test$predicted) 
+MAPE <- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
     MAPE
 
 
@@ -129,22 +128,22 @@ summary(test)
 
 forecast_test <- data.frame(actual=test, predicted=predict(prcfit,test))
 
-forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+forecast_test %>% dplyr::select(c(actual.var_38,predicted)) %>% 
   ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
   theme_fivethirtyeight(base_size = 12, base_family = "sans")+
-  geom_point(aes(y = actual.revenue), color = "blue") + 
+  geom_point(aes(y = actual.var_38), color = "blue") + 
   geom_point(aes(y = predicted), color = 'red') + 
   geom_line(aes(y = predicted), color = 'red')+ 
-  geom_line(aes(y = actual.revenue), color = 'blue') +
-    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+  geom_line(aes(y = actual.var_38), color = 'blue') +
+    labs(title = "Actual var_38 (Blue) vs. Predicted var_38 (Red)")+ 
     expand_limits(x = 0, y = 8000000)+ 
     scale_y_continuous(labels = scales::dollar_format())+
     scale_x_continuous(labels = number_format(accuracy = 1))
   
     print(forecast_test)
     
-  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
-  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+  RMSE(forecast_test$actual.var_38, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
     MAPE
 
 
