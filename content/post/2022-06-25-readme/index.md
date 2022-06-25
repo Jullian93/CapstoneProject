@@ -1,11 +1,9 @@
 ---
-title: ReadMe
-author: Jullian Schrup
+title: "ReadMe"
+author: "Jullian Schrup"
 date: '2022-06-25'
 slug: readme
-categories:
-  - R
-tags: []
+categories: R
 ---
 
 Updated Project Proposal -
