@@ -140,9 +140,12 @@ forecast_test %>% dplyr::select(c(actual.var_38,predicted)) %>%
   
     print(forecast_test)
     
-  RMSE(forecast_test$actual.var_38, forecast_test$predicted) 
+# RMSE = 
+RMSE(forecast_test$actual.var_38, forecast_test$predicted) 
   MAPE <- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
-    MAPE
+  
+# MAPE = 
+MAPE
 
 
 ```
