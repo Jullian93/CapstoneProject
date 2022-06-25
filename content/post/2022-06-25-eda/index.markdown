@@ -7,67 +7,12 @@ categories:
   - R
 
 ---
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
-
-```r
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-library(tidyverse)
-library(tidytext)
-library(caret)
-library(fastDummies)
-library(randomForest)
-library(ggplot2)
-library(rpart)
-library(rpart.plot)
-library(xgboost)
-library(MASS)
-library(janitor)
-library(psych)
-library(corrplot)
-library(scales)
-library(ggthemes)
-library(mboost)
-library(bst)
-library(h2o)
-library(reshape2)
-library(ShapleyValue)
-library(kableExtra)
-library(car)
-library(readxl)
-library(blogdown)
-
-
-DMM_2022_Data_Used <- read.csv("C:/Users/julli/Downloads/Masked_Data.csv")
-DMM_2022_Data_Used2 <- read.csv("C:/Users/julli/Downloads/MaskedData2.csv")
-
-RST <- clean_names(DMM_2022_Data_Used)
-RST <- dplyr::select(RST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
-
-QST <- clean_names(DMM_2022_Data_Used2)
-QST <- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
-```
 
 # STEP 1: PCA - FACTOR ANALYSIS" QST
 
-
-```r
-DMM <- QST %>% dplyr::select(-c(week,var_38))
-
-## FACTOR
-
-DMM_1 <- prcomp(x = DMM)
-screeplot(DMM_1, type = "lines") ## We want to cutoff the screeplot at 4 factors
-```
-
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-1.png" width="672" />
-
-```r
-prc <- bind_cols(dplyr::select(QST, var_38),as.data.frame(DMM_1$x))
-
-# Correlation with var_38
-correlationmatrix <- cor(x = prc, y = prc$var_38) 
-correlationmatrix
-```
 
 ```
 ##               [,1]
@@ -102,11 +47,6 @@ correlationmatrix
 ## PC28    0.09358079
 ## PC29   -0.06404932
 ## PC30   -0.16174947
-```
-
-```r
-filteredcorrelations <- as.data.frame(apply(correlationmatrix, 2, function(x) ifelse (abs(x) >=0.10, round(x,3), "-")))
-filteredcorrelations
 ```
 
 ```
@@ -144,38 +84,10 @@ filteredcorrelations
 ## PC30   -0.162
 ```
 
-```r
-melted_cormat <- melt(correlationmatrix)
-
-ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
-  geom_tile() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))  + 
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "#FFFFCC",
-                       high = "#FF0000") +
-  geom_tile(color = "black") +
-  geom_text(aes(label = round(value, 2)), color = "black", size = 3) +
-  coord_fixed()
-```
-
-<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-2.png" width="672" />
-
-```r
-# Finding most correlated PCA - for QST, it's Component 2.
-biplot(DMM_1, choices = c(1,2))
-```
-
-<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-3.png" width="672" />
-
-```r
-print(ncol(DMM_1))
-```
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-2.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-3.png" width="672" />
 
 ```
 ## NULL
-```
-
-```r
-DMM_1$rotation
 ```
 
 ```
@@ -367,10 +279,6 @@ DMM_1$rotation
 ## var_37  1.335588e-02 -0.052592984  0.014133702 -1.718348e-01 -9.834544e-01
 ```
 
-```r
-DMM_1$rotation[,2] %>% round(2)
-```
-
 ```
 ##  var_6  var_7 var_10 var_11 var_12 var_13 var_14 var_15 var_16 var_17 var_18 
 ##   0.04  -0.36  -0.03  -0.04  -0.01   0.00   0.00  -0.01   0.00  -0.89  -0.19 
@@ -382,24 +290,6 @@ DMM_1$rotation[,2] %>% round(2)
 
 # STEP 2 QST PCA PREDICTION
 
-
-```r
-set.seed(123)
-prc_index <- createDataPartition(prc$var_38, p = 0.70, list = FALSE)
-train <- prc[ prc_index, ]
-test <- prc[-prc_index, ]
-tunegrid <- expand.grid(.mtry=1:50)
-
-
-prcfit <- train(var_38 ~ .,
-             data = train, 
-             method = "rf",
-             metric = "RMSE",
-             trControl = trainControl(method = "boot"),
-             tuneGrid = tunegrid)
-
-prcfit$results
-```
 
 ```
 ##    mtry    RMSE  Rsquared     MAE   RMSESD RsquaredSD    MAESD
@@ -455,10 +345,6 @@ prcfit$results
 ## 50   50 1597584 0.2169748 1222467 553105.7  0.2095669 318677.3
 ```
 
-```r
-summary(prcfit$results)
-```
-
 ```
 ##       mtry            RMSE            Rsquared           MAE         
 ##  Min.   : 1.00   Min.   :1593415   Min.   :0.1707   Min.   :1217160  
@@ -476,19 +362,7 @@ summary(prcfit$results)
 ##  Max.   :562358   Max.   :0.2569   Max.   :329166
 ```
 
-```r
-  plot(varImp(prcfit))
-```
-
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" />
-
-```r
-#### Forecast & MAPE
-
-forecast_test <- data.frame(actual=test, predicted=predict(prcfit,test))
-  
-    print(forecast_test)
-```
 
 ```
 ##    actual.var_38  actual.PC1 actual.PC2 actual.PC3 actual.PC4 actual.PC5
@@ -547,25 +421,12 @@ forecast_test <- data.frame(actual=test, predicted=predict(prcfit,test))
 ## 30 -0.188772994  12323825
 ```
 
-```r
-RMSE(forecast_test$actual.var_38, forecast_test$predicted) 
-```
-
 ```
 ## [1] 999903.4
 ```
 
-```r
-MAPE <- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
-    MAPE
-```
-
 ```
 ## [1] 6.960589
-```
-
-```r
-summary(test)
 ```
 
 ```
@@ -627,27 +488,7 @@ summary(test)
 ##  Max.   : 1.2603   Max.   : 0.32976   Max.   : 0.18874
 ```
 
-```r
-forecast_test <- data.frame(actual=test, predicted=predict(prcfit,test))
-
-forecast_test %>% dplyr::select(c(actual.var_38,predicted)) %>% 
-  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
-  theme_fivethirtyeight(base_size = 12, base_family = "sans")+
-  geom_point(aes(y = actual.var_38), color = "blue") + 
-  geom_point(aes(y = predicted), color = 'red') + 
-  geom_line(aes(y = predicted), color = 'red')+ 
-  geom_line(aes(y = actual.var_38), color = 'blue') +
-    labs(title = "Actual var_38 (Blue) vs. Predicted var_38 (Red)")+ 
-    expand_limits(x = 0, y = 8000000)+ 
-    scale_y_continuous(labels = scales::dollar_format())+
-    scale_x_continuous(labels = number_format(accuracy = 1))
-```
-
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-2.png" width="672" />
-
-```r
-    print(forecast_test)
-```
 
 ```
 ##    actual.var_38  actual.PC1 actual.PC2 actual.PC3 actual.PC4 actual.PC5
@@ -706,17 +547,8 @@ forecast_test %>% dplyr::select(c(actual.var_38,predicted)) %>%
 ## 30 -0.188772994  12323825
 ```
 
-```r
-  RMSE(forecast_test$actual.var_38, forecast_test$predicted) 
-```
-
 ```
 ## [1] 999903.4
-```
-
-```r
-  MAPE <- mean(abs((forecast_test$actual.var_38-forecast_test$predicted)/forecast_test$actual.var_38)) * 100
-    MAPE
 ```
 
 ```

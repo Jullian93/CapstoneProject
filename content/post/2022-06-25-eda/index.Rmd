@@ -5,9 +5,9 @@ date: '2022-06-25'
 slug: eda
 
 ---
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```{r setup, message=FALSE, warning=FALSE, echo= FALSE}
 
-```{r setup, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(tidyverse)
 library(tidytext)
 library(caret)
@@ -48,7 +48,7 @@ QST <- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
 
 # STEP 1: PCA - FACTOR ANALYSIS" QST
 
-```{r}
+```{r, echo= FALSE}
 
 DMM <- QST %>% dplyr::select(-c(week,var_38))
 
@@ -89,7 +89,7 @@ DMM_1$rotation[,2] %>% round(2)
 
 # STEP 2 QST PCA PREDICTION
 
-```{r}
+```{r, echo= FALSE}
 set.seed(123)
 prc_index <- createDataPartition(prc$var_38, p = 0.70, list = FALSE)
 train <- prc[ prc_index, ]
