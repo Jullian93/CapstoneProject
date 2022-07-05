@@ -10,7 +10,7 @@ categories:
 
 
 
-# STEP 1: PCA - FACTOR ANALYSIS
+# STEP 1: PCA - FACTOR ANALYSIS QST
 
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-1.png" width="672" />
 

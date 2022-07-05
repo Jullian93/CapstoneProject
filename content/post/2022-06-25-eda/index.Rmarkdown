@@ -48,7 +48,7 @@ QST <- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
 
 ```
 
-# STEP 1: PCA - FACTOR ANALYSIS
+# STEP 1: PCA - FACTOR ANALYSIS QST
 
 ```{r, echo= FALSE}
 

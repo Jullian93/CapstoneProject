@@ -5,7 +5,7 @@ date: '2022-06-25'
 slug: eda
 
 ---
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
 ```{r setup, message=FALSE, warning=FALSE, echo= FALSE}
 
 library(tidyverse)
@@ -46,7 +46,7 @@ QST <- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
 
 ```
 
-# STEP 1: PCA - FACTOR ANALYSIS" QST
+# STEP 1: PCA - FACTOR ANALYSIS QST
 
 ```{r, echo= FALSE}
 
