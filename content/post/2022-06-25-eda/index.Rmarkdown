@@ -9,7 +9,7 @@ categories:
 ---
 
 ```{r setup, message=FALSE, warning=FALSE, echo= FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
 library(tidyverse)
 library(tidytext)
 library(caret)
@@ -48,7 +48,7 @@ QST <- dplyr::select(QST, -c(var_1, var_2, var_3, var_4, var_5, var_8, var_9))
 
 ```
 
-# STEP 1: PCA - FACTOR ANALYSIS" QST
+# STEP 1: PCA - FACTOR ANALYSIS
 
 ```{r, echo= FALSE}
 
@@ -85,7 +85,8 @@ biplot(DMM_1, choices = c(1,2))
 
 
 print(ncol(DMM_1))
-DMM_1$rotation
+DMM2 <- DMM_1$rotation[1:5,1:5]
+DMM2
 DMM_1$rotation[,2] %>% round(2)
 ```
 
