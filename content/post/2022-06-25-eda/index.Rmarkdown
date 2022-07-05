@@ -7,7 +7,7 @@ categories:
   - R
 
 ---
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
 ```{r setup, message=FALSE, warning=FALSE, echo= FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(tidyverse)
