@@ -45,7 +45,7 @@ FST <- dplyr::select(FST, -c(entry_page_home_page, entry_page_includes_size, ent
 
 
 ```
-# STEP 1: PCA - FACTOR ANALYSIS" FST
+# STEP 1: PCA - FACTOR ANALYSIS
 ```{r}
 
 DMM <- FST %>% filter(promo == 0) %>% dplyr::select(-c(brand,region,week,revenue))
@@ -81,7 +81,8 @@ biplot(DMM_1, choices = c(1,2))
 
 
 print(ncol(DMM_1))
-DMM_1$rotation
+DMM2 <- DMM_1$rotation[1:5,1:5]
+DMM2
 DMM_1$rotation[,2] %>% round(2)
 ```
 # STEP 2 FST PCA PREDICTION
