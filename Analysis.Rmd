@@ -1,0 +1,475 @@
+---
+title: "Analysis"
+author: "Jullian Schrup"
+date: '2022-07-17'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(tidytext)
+library(caret)
+library(fastDummies)
+library(randomForest)
+library(ggplot2)
+library(rpart)
+library(rpart.plot)
+library(xgboost)
+library(MASS)
+library(janitor)
+library(psych)
+library(corrplot)
+library(scales)
+library(ggthemes)
+library(mboost)
+library(bst)
+library(h2o)
+library(reshape2)
+library(ShapleyValue)
+library(kableExtra)
+library(car)
+library(readxl)
+library(blogdown)
+
+
+DMM_2022_Data_BST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - BST - Used (10).csv")
+DMM_2022_Data_FST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - FST - Used.csv")
+HiddenData <- read.csv("C:/Users/julli/Downloads/DMM_CSV_2Weeks.csv")
+HiddenFST <- read.csv("C:/Users/julli/Downloads/HiddenFST.csv")
+BST <- clean_names(DMM_2022_Data_BST_Used)
+BST <- dplyr::select(BST, -c(entry_page_home_page, entry_page_includes_size, entry_page_includes_tire_type, entry_page_includes_vehicles, entry_page_includes_tire_brands, tdp_entry, csc_entry))
+
+FST <- clean_names(DMM_2022_Data_FST_Used)
+FST <- dplyr::select(FST, -c(entry_page_home_page, entry_page_includes_size, entry_page_includes_tire_type, entry_page_includes_vehicles, entry_page_includes_tire_brands, tdp_entry, csc_entry))
+
+
+```
+# MODELING
+```{r}
+
+BST <- clean_names(DMM_2022_Data_BST_Used)
+
+
+DM <- dplyr::select(BST, -c(week, region, brand, catalog_search_complete_e10))
+set.seed(123)
+
+
+
+DM_index <- createDataPartition(DM$revenue, p = 0.70, list = FALSE) # HIDING DATA FROM THE MODEL
+train <- DM[ DM_index, ] # HIDING DATA FROM THE MODEL
+test <- DM[-DM_index, ] # HIDING DATA FROM THE MODEL - TRAIN TEST SPLIT
+
+### xgbLinear CV = 10 
+
+fit <- train(revenue ~ ., # REVENUE Response Variable
+             data = train, # Data
+             method = "xgbLinear", # ML MODEL SELECTIONS Boosted Model 
+             metric = "RMSE", #RMSE 
+             trControl = trainControl(method = "cv", number = 10) #Cross Validation 
+             )
+
+# EGG CRACKER
+fit$results
+
+summary(fit$results)
+  plot(varImp(fit))
+
+
+#### Forecast & MAPE - MODEL TEST
+
+forecast_test <- data.frame(actual=test, predicted=predict(fit,test))
+  
+    print(forecast_test)
+    mean(forecast_test$predicted)
+  
+   RMSE(forecast_test$actual.revenue, forecast_test$predicted) / mean(forecast_test$predicted)
+   
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+
+
+forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
+  theme_fivethirtyeight(base_size = 12, base_family = "sans")+
+  geom_point(aes(y = actual.revenue), color = "blue") + 
+  geom_point(aes(y = predicted), color = 'red') + 
+  geom_line(aes(y = predicted), color = 'red')+ 
+  geom_line(aes(y = actual.revenue), color = 'blue') +
+    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+    expand_limits(x = 0, y = 8000000)+ 
+    scale_y_continuous(labels = scales::dollar_format())+
+    scale_x_continuous(labels = number_format(accuracy = 1))
+
+
+```
+
+```{r}
+### xgbLinear boot
+
+fit2 <- train(revenue ~ .,
+             data = train, 
+             method = "xgbLinear",
+             metric = "RMSE",
+             trControl = trainControl(method = "boot")
+             )
+
+
+fit2$results
+
+summary(fit2$results)
+  plot(varImp(fit2))
+
+
+#### Forecast & MAPE
+
+forecast_test <- data.frame(actual=BST, predicted=predict(fit2,BST))
+  
+    print(forecast_test)
+    
+  
+  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+
+
+forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
+  theme_fivethirtyeight(base_size = 12, base_family = "sans")+
+  geom_point(aes(y = actual.revenue), color = "blue") + 
+  geom_point(aes(y = predicted), color = 'red') + 
+  geom_line(aes(y = predicted), color = 'red')+ 
+  geom_line(aes(y = actual.revenue), color = 'blue') +
+    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+    expand_limits(x = 0, y = 8000000)+ 
+    scale_y_continuous(labels = scales::dollar_format())+
+    scale_x_continuous(labels = number_format(accuracy = 1))
+
+
+```
+
+```{r}
+### Rpart
+
+fit3 <- train(revenue ~ .,
+             data = train, 
+             method = "rpart",
+             metric = "RMSE",
+             trControl = trainControl(method = "cv", number = 6)
+             
+             )
+
+fit3$results
+
+summary(fit3$results)
+  plot(varImp(fit3))
+
+
+#### Forecast & MAPE
+
+forecast_test <- data.frame(actual=BST, predicted=predict(fit3,BST))
+  
+    print(forecast_test)
+    
+  
+  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+
+forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
+  theme_fivethirtyeight(base_size = 12, base_family = "sans")+
+  geom_point(aes(y = actual.revenue), color = "blue") + 
+  geom_point(aes(y = predicted), color = 'red') + 
+  geom_line(aes(y = predicted), color = 'red')+ 
+  geom_line(aes(y = actual.revenue), color = 'blue') +
+    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+    expand_limits(x = 0, y = 8000000)+ 
+    scale_y_continuous(labels = scales::dollar_format())+
+    scale_x_continuous(labels = number_format(accuracy = 1))
+
+```
+
+```{r}
+
+### KNN
+fit4 <- train(revenue ~ .,
+             data = train, 
+             method = "knn",
+             tuneLength = 15,
+             trControl = trainControl(method = "boot"))
+fit4$results
+
+summary(fit4$results)
+  plot(varImp(fit4))
+
+
+#### Forecast & MAPE
+
+forecast_test <- data.frame(actual=BST, predicted=predict(fit4,BST))
+  
+    print(forecast_test)
+    
+  
+  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+
+forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
+  theme_fivethirtyeight(base_size = 12, base_family = "sans")+
+  geom_point(aes(y = actual.revenue), color = "blue") + 
+  geom_point(aes(y = predicted), color = 'red') + 
+  geom_line(aes(y = predicted), color = 'red')+ 
+  geom_line(aes(y = actual.revenue), color = 'blue') +
+    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+    expand_limits(x = 0, y = 8000000)+ 
+    scale_y_continuous(labels = scales::dollar_format())+
+    scale_x_continuous(labels = number_format(accuracy = 1))
+
+
+```
+
+
+# CURRENT MODEL BUILD - Clayton, here -
+```{r}
+DMM_2022_Data_BST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - BST - Used (10).csv")
+HiddenData <- read.csv("C:/Users/julli/Downloads/DMM_CSV_2Weeks.csv")
+
+# Cleaning
+BST <- clean_names(DMM_2022_Data_BST_Used)
+
+  DM <- dplyr::select(BST, c(manual_e4_tdp, manual_e4_csc, promo, csc_interaction, csc_catalog_not_entry, visited_reward_center , offers_section_not_financing_visit, revenue, tdp_interaction, bridgestone_stepss, video_views_e65, x_90_day_buy_try_visit))
+
+## Set Control
+set.seed(12345)
+DM_index <- createDataPartition(DM$revenue, p = 0.8, list = FALSE)
+train <- DM[ DM_index, ]
+test <- DM[-DM_index, ]
+tunegrid <- expand.grid(.mtry=1:50) # .mytry 50 
+### Model
+fit5 <- train(revenue ~ .,
+             data = train, 
+             method = "rf",
+             metric = "RMSE",
+             trControl = trainControl(method = "repeatedcv", repeats = 3, number = 10, search = "random"),
+             tuneGrid = tunegrid
+             
+             
+             )
+
+fit5$results
+summary(fit5$final)
+  plot(varImp(fit5))
+  
+testData <- dplyr::full_join(test,HiddenData)
+HiddenData
+
+
+
+
+#### Forecast & MAPE
+forecast_test <- data.frame(actual=testData, predicted=predict(fit5,testData))
+  
+    print(forecast_test)
+
+
+forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
+          theme_classic() + 
+  geom_point(aes(y = actual.revenue), color = "#B22222") + 
+  geom_point(aes(y = predicted), color = 'black') + 
+  geom_line(aes(y = predicted), color = 'black')+ 
+  geom_line(aes(y = actual.revenue), color = '#B22222') +
+  labs(title = "Bridgestone", subtitle = "Actual Revenue (Black) vs. Predicted Revenue (Red)")+
+  expand_limits(y = c(4500000,7000000))+
+  scale_y_continuous(name = "Revenue", labels = scales::dollar_format())+
+  scale_x_continuous(name = "Scenario", labels = number_format(accuracy = 1),)
+
+  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+    
+
+```
+# Scenario Builder - BST
+```{r}
+
+HiddenData <- read_excel("C:/Users/julli/Downloads/BST_WhatIfExcel.xlsx", sheet = "Original")
+WhatIf <- read_excel("C:/Users/julli/Downloads/BST_WhatIfExcel.xlsx", sheet = "WhatIf")
+
+forecast_test <- data.frame(actual=HiddenData, predicted=predict(fit5,HiddenData))
+forecast_test1 <- data.frame(actual=forecast_test$predicted, predicted=predict(fit5,WhatIf))
+
+forecast_test1 %>% dplyr::select(c(actual,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test1)))) +
+  theme_bw()+
+  geom_point(aes(y = actual), color = "blue") + 
+  geom_point(aes(y = predicted), color = 'red') + 
+  geom_line(aes(y = predicted), color = 'red')+ 
+  geom_line(aes(y = actual), color = 'blue') +
+    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+    scale_y_continuous(labels = scales::dollar_format())+
+    scale_x_continuous(labels = number_format(accuracy = 1))
+
+forecast_test1 %>% summarize(mean((predicted - actual)/predicted*forecast_test$actual.revenue))
+forecast_test1 %>% summarize(sum((predicted - actual)/predicted*forecast_test$actual.revenue))
+
+320000*12
+```
+
+
+
+
+### FST Initial Model
+```{r}
+# Cleaning
+DMM_2022_Data_FST_Used <- read.csv("C:/Users/julli/Downloads/DMM 2022 - Data - FST - Used.csv")
+HiddenFST <- read.csv("C:/Users/julli/Downloads/HiddenFST.csv")
+FST <- clean_names(DMM_2022_Data_FST_Used)
+
+
+DM <- FST %>% dplyr::select(c(manual_e4_tdp, manual_e4_csc, promo, tire_comparison_e24, csc_catalog_not_entry, visited_reward_center , offers_section_not_financing_visit, revenue, tdp_interaction,stepss, video_views_e65, x90_day_buy_try_visit))
+
+## 1). Offer not financing -> create metric -> went to offers section didn't do financing & did not do reward center -exclude rewards:: 
+## 2). Visited Reward Center update - 
+
+## Set Control
+set.seed(12)
+DM_index <- createDataPartition(DM$revenue, p = 0.7, list = FALSE)
+train <- DM[ DM_index, ]
+test <- DM[-DM_index, ]
+tunegrid <- expand.grid(.mtry=1:500)
+### Model
+
+
+
+FSTfit <- train(revenue ~ .,
+             data = train, 
+             method = "rf",
+             metric = "RMSE",
+             trControl = trainControl(method = "repeatedcv", repeats = 3, number = 3, search = "random"),
+             tuneGrid = tunegrid
+             )
+
+
+FSTfit$results
+
+summary(FSTfit$fit)
+  plot(varImp(FSTfit))
+  
+
+#### Forecast & MAPE
+
+forecast_test <- data.frame(actual=test, predicted=predict(FSTfit,test))
+forecast_test$index <- 1:nrow(forecast_test)
+forecast_test %>% dplyr::select(c(actual.revenue,predicted,index)) %>% 
+  ggplot(aes(x = index)) +
+  theme_classic()+
+  geom_point(aes(y = actual.revenue), color = "#B22222") + 
+  geom_point(aes(y = predicted), color = 'black') + 
+  geom_line(aes(y = predicted), color = 'black')+ 
+  geom_line(aes(y = actual.revenue), color = '#B22222') +
+    labs(title = "Firestone",subtitle = "Actual Revenue (Black) vs. Predicted Revenue (Red)", )+
+    expand_limits(y = c(10000000,15000000)) +
+    scale_y_continuous(name = "Revenue", labels = scales::dollar_format())+
+    scale_x_continuous(name = "Scenario", labels = number_format(accuracy = 1),)
+
+    
+    print(forecast_test)
+    predict(FSTfit, test)
+    
+  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+    
+
+
+
+```
+
+```{r}
+forecast_test <- data.frame(actual=HiddenFST, predicted=predict(FSTfit,HiddenFST))
+  
+    print(forecast_test)
+
+
+forecast_test %>% dplyr::select(c(actual.revenue,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_test)))) +
+          theme_classic() + 
+  geom_point(aes(y = actual.revenue), color = "#B22222") + 
+  geom_point(aes(y = predicted), color = 'black') + 
+  geom_line(aes(y = predicted), color = 'black')+ 
+  geom_line(aes(y = actual.revenue), color = '#B22222') +
+  labs(title = "Bridgestone", subtitle = "Actual Revenue (Black) vs. Predicted Revenue (Red)")+
+  expand_limits(y = c(4500000,7000000))+
+  scale_y_continuous(name = "Revenue", labels = scales::dollar_format())+
+  scale_x_continuous(name = "Scenario", labels = number_format(accuracy = 1),)
+
+  RMSE(forecast_test$actual.revenue, forecast_test$predicted) 
+  MAPE <- mean(abs((forecast_test$actual.revenue-forecast_test$predicted)/forecast_test$actual.revenue)) * 100
+    MAPE
+    
+
+```
+
+# Scenario Builder - FST
+```{r}
+HiddenData1 <- read_excel("C:/Users/julli/Downloads/FST_WhatIfExcel.xlsx", sheet = "Original")
+WhatIfFST <- read_excel("C:/Users/julli/Downloads/FST_WhatIfExcel.xlsx", sheet = "WhatIf")
+
+forecast_testFST <- data.frame(actual=HiddenData1, predicted=predict(FSTfit,HiddenData1))
+forecast_testWI <- data.frame(actual=forecast_testFST$predicted, predicted=predict(FSTfit,WhatIfFST))
+
+forecast_testWI %>% dplyr::select(c(actual,predicted)) %>% 
+  ggplot(aes(x = as.numeric(row.names(forecast_testWI)))) +
+  theme_bw()+
+  geom_point(aes(y = actual), color = "blue") + 
+  geom_point(aes(y = predicted), color = 'red') + 
+  geom_line(aes(y = predicted), color = 'red')+ 
+  geom_line(aes(y = actual), color = 'blue') +
+    labs(title = "Actual Revenue (Blue) vs. Predicted Revenue (Red)")+ 
+    scale_y_continuous(labels = scales::dollar_format())+
+    scale_x_continuous(labels = number_format(accuracy = 1))
+
+forecast_testWI %>% summarize(mean((predicted - actual)/predicted*forecast_testFST$actual.revenue))
+forecast_testWI %>% summarize(sum(predicted - actual))
+
+
+```
+
+```{r}
+    
+correlationmatrix <- cor(x = DM, y = DM) 
+correlationmatrix
+
+melted_cormat <- melt(correlationmatrix)
+
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))  + 
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "#FFFFCC",
+                       high = "#FF0000") +
+  geom_tile(color = "black") +
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) +
+  coord_fixed()
+
+filteredcorrelations <- as.data.frame(apply(correlationmatrix, 2, function(x) ifelse (abs(x) >=0.10, round(x,3), "-")))
+filteredcorrelations
+
+
+shapleydata <- DM
+head(shapleydata) %>%
+kbl() %>%
+kable_classic(full_width = F, html_font = "Cambria")
+y <- shapleydata$revenue
+x <- as.data.frame(dplyr::select(shapleydata, -revenue))
+value <- shapleyvalue(y,x)
+
+value %>%
+kbl() %>%
+kable_classic(full_width = F, html_font = "Cambria")
+
+```
